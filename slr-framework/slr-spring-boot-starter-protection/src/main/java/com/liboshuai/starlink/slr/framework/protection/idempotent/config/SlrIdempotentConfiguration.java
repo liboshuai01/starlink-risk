@@ -1,13 +1,12 @@
 package com.liboshuai.starlink.slr.framework.protection.idempotent.config;
 
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.aop.IdempotentAspect;
+import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.IdempotentKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.DefaultIdempotentKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.ExpressionIdempotentKeyResolver;
-import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.IdempotentKeyResolver;
-import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.UserIdempotentKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.redis.IdempotentRedisDAO;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import com.liboshuai.starlink.slr.framework.redis.config.SlrRedisAutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
@@ -31,11 +30,6 @@ public class SlrIdempotentConfiguration {
     @Bean
     public DefaultIdempotentKeyResolver defaultIdempotentKeyResolver() {
         return new DefaultIdempotentKeyResolver();
-    }
-
-    @Bean
-    public UserIdempotentKeyResolver userIdempotentKeyResolver() {
-        return new UserIdempotentKeyResolver();
     }
 
     @Bean

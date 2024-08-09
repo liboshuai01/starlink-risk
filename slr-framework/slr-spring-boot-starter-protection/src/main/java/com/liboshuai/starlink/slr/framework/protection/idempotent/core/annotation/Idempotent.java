@@ -3,7 +3,6 @@ package com.liboshuai.starlink.slr.framework.protection.idempotent.core.annotati
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.DefaultIdempotentKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.IdempotentKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.ExpressionIdempotentKeyResolver;
-import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.UserIdempotentKeyResolver;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -40,7 +39,6 @@ public @interface Idempotent {
      * 使用的 Key 解析器
      *
      * @see DefaultIdempotentKeyResolver 全局级别
-     * @see UserIdempotentKeyResolver 用户级别
      * @see ExpressionIdempotentKeyResolver 自定义表达式，通过 {@link #keyArg()} 计算
      */
     Class<? extends IdempotentKeyResolver> keyResolver() default DefaultIdempotentKeyResolver.class;
