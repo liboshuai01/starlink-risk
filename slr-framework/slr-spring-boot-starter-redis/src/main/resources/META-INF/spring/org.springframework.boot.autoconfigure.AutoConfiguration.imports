@@ -1,0 +1,2 @@
+com.liboshuai.starlink.slr.framework.redis.config.SlrRedisAutoConfiguration
+com.liboshuai.starlink.slr.framework.redis.config.SlrCacheAutoConfiguration

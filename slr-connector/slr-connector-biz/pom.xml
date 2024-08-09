@@ -12,15 +12,31 @@
 
     <name>slr-connector-biz</name>
     <description>数据连接系统</description>
+    <url>https://liboshuai.com</url>
 
     <dependencies>
+        <!-- spring web 配置所需依赖 -->
         <dependency>
             <groupId>com.liboshuai.starlink</groupId>
             <artifactId>slr-spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- spring kafka 配置所需依赖 -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
+        </dependency>
+        <!-- spring boot 配置所需依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- slr-connector-aip 数据连接器项目api -->
+        <dependency>
+            <groupId>com.liboshuai.starlink</groupId>
+            <artifactId>slr-connector-api</artifactId>
+            <version>${revision}</version>
         </dependency>
     </dependencies>
 

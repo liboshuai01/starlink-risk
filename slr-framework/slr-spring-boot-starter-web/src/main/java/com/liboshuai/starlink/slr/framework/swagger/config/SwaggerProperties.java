@@ -10,7 +10,7 @@ import javax.validation.constraints.NotEmpty;
  *
  * @author 李博帅
  */
-@ConfigurationProperties("yudao.swagger")
+@ConfigurationProperties("slr.swagger")
 @Data
 public class SwaggerProperties {
 

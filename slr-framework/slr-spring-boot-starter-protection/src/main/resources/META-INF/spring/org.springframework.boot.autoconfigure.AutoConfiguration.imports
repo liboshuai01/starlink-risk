@@ -1,0 +1,4 @@
+com.liboshuai.starlink.slr.framework.protection.idempotent.config.SlrIdempotentConfiguration
+com.liboshuai.starlink.slr.framework.protection.lock4j.config.SlrLock4jConfiguration
+com.liboshuai.starlink.slr.framework.protection.ratelimiter.config.SlrRateLimiterConfiguration
+com.liboshuai.starlink.slr.framework.protection.signature.config.SlrApiSignatureAutoConfiguration

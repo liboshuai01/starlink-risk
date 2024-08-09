@@ -8,8 +8,7 @@ target/
 *.iws
 *.iml
 *.ipr
-.flattened-pom.xml
-**/.flattened-pom.xml
+
 
 ### Eclipse ###
 .apt_generated
@@ -35,3 +34,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### other ###
+.flattened-pom.xml
+**/.flattened-pom.xml
+logs

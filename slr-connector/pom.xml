@@ -9,7 +9,7 @@
 
     <artifactId>slr-connector</artifactId>
     <packaging>pom</packaging>
-    <name>slr-connector</name>
+    <name>${project.artifactId}</name>
     <modules>
         <module>slr-connector-biz</module>
         <module>slr-connector-api</module>

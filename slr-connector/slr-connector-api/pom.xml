@@ -10,7 +10,13 @@
     <artifactId>slr-connector-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>slr-connector-api</name>
+    <name>${project.artifactId}</name>
     <description>数据连接系统api</description>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.liboshuai.starlink</groupId>
+            <artifactId>slr-common</artifactId>
+        </dependency>
+    </dependencies>
 </project>

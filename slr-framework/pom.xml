@@ -9,12 +9,14 @@
 
     <artifactId>slr-framework</artifactId>
     <packaging>pom</packaging>
-    <name>slr-framework</name>
+    <name>${project.artifactId}</name>
     <description>技术组件模块</description>
 
     <modules>
         <module>slr-common</module>
         <module>slr-spring-boot-starter-web</module>
+        <module>slr-spring-boot-starter-redis</module>
+        <module>slr-spring-boot-starter-protection</module>
     </modules>
 
 </project>

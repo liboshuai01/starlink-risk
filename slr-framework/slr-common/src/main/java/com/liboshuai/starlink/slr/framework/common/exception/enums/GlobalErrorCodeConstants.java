@@ -14,7 +14,7 @@ import com.liboshuai.starlink.slr.framework.common.exception.ErrorCode;
  */
 public interface GlobalErrorCodeConstants {
 
-    ErrorCode SUCCESS = new ErrorCode(0, "成功");
+    ErrorCode SUCCESS = new ErrorCode(200, "成功");
 
     // ========== 客户端错误段 ==========
 

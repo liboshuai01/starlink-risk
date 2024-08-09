@@ -9,9 +9,8 @@
 
     <artifactId>slr-admin</artifactId>
     <packaging>jar</packaging>
-
-    <name>slr-admin</name>
-    <url>http://maven.apache.org</url>
+    <name>${project.artifactId}</name>
+    <description>星链风控管理平台</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
