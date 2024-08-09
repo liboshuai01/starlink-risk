@@ -9,6 +9,7 @@ target/
 *.iml
 *.ipr
 .flattened-pom.xml
+**/.flattened-pom.xml
 
 ### Eclipse ###
 .apt_generated
