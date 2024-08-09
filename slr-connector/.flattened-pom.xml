@@ -7,13 +7,12 @@
     <artifactId>starlink-risk</artifactId>
     <version>1.0</version>
   </parent>
-  <artifactId>slr-framework</artifactId>
+  <artifactId>slr-connector</artifactId>
   <version>1.0</version>
   <packaging>pom</packaging>
-  <name>slr-framework</name>
-  <description>技术组件模块</description>
+  <name>slr-connector</name>
   <modules>
-    <module>slr-common</module>
-    <module>slr-spring-boot-starter-web</module>
+    <module>slr-connector-biz</module>
+    <module>slr-connector-api</module>
   </modules>
 </project>

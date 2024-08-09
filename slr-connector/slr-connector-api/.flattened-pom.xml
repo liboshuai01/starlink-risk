@@ -4,16 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.liboshuai.starlink</groupId>
-    <artifactId>starlink-risk</artifactId>
+    <artifactId>slr-connector</artifactId>
     <version>1.0</version>
   </parent>
-  <artifactId>slr-framework</artifactId>
+  <artifactId>slr-connector-api</artifactId>
   <version>1.0</version>
-  <packaging>pom</packaging>
-  <name>slr-framework</name>
-  <description>技术组件模块</description>
-  <modules>
-    <module>slr-common</module>
-    <module>slr-spring-boot-starter-web</module>
-  </modules>
+  <name>slr-connector-api</name>
+  <description>数据连接系统api</description>
 </project>

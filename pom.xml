@@ -11,7 +11,7 @@
   <description>星链风控系统</description>
 
   <modules>
-    <module>slr-dispatcher</module>
+    <module>slr-connector</module>
     <module>slr-engine</module>
     <module>slr-framework</module>
     <module>slr-admin</module>
