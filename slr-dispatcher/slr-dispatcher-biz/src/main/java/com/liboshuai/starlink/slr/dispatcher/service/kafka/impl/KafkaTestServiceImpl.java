@@ -2,7 +2,6 @@ package com.liboshuai.starlink.slr.dispatcher.service.kafka.impl;
 
 import com.liboshuai.starlink.slr.dispatcher.pojo.vo.KafkaInfoVO;
 import com.liboshuai.starlink.slr.dispatcher.service.kafka.KafkaTestService;
-import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;

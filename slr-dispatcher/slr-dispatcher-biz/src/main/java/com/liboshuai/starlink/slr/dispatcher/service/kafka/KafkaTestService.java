@@ -1,7 +1,6 @@
 package com.liboshuai.starlink.slr.dispatcher.service.kafka;
 
 import com.liboshuai.starlink.slr.dispatcher.pojo.vo.KafkaInfoVO;
-import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;
 
 public interface KafkaTestService {
     /**
