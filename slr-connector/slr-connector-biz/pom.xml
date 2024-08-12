@@ -20,6 +20,11 @@
             <groupId>com.liboshuai.starlink</groupId>
             <artifactId>slr-spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- 参数效验 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
         <!-- spring kafka 配置所需依赖 -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
@@ -32,6 +37,16 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- 服务保证 -->
+        <dependency>
+            <groupId>com.liboshuai.starlink</groupId>
+            <artifactId>slr-spring-boot-starter-protection</artifactId>
+        </dependency>
+        <!-- Redis 封装拓展 -->
+        <dependency>
+            <groupId>com.liboshuai.starlink</groupId>
+            <artifactId>slr-spring-boot-starter-redis</artifactId>
+        </dependency>
         <!-- slr-connector-aip 数据连接器项目api -->
         <dependency>
             <groupId>com.liboshuai.starlink</groupId>

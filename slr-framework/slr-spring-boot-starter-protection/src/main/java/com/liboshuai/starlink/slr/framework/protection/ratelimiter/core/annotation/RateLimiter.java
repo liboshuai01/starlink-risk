@@ -1,10 +1,10 @@
 package com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.annotation;
 
 import com.liboshuai.starlink.slr.framework.common.exception.enums.GlobalErrorCodeConstants;
-import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.ExpressionIdempotentKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.keyresolver.RateLimiterKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.keyresolver.impl.ClientIpRateLimiterKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.keyresolver.impl.DefaultRateLimiterKeyResolver;
+import com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.keyresolver.impl.ExpressionRateLimiterKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.keyresolver.impl.ServerNodeRateLimiterKeyResolver;
 
 import java.lang.annotation.ElementType;
@@ -49,7 +49,7 @@ public @interface RateLimiter {
      * @see DefaultRateLimiterKeyResolver 全局级别
      * @see ClientIpRateLimiterKeyResolver 用户 IP 级别
      * @see ServerNodeRateLimiterKeyResolver 服务器 Node 级别
-     * @see ExpressionIdempotentKeyResolver 自定义表达式，通过 {@link #keyArg()} 计算
+     * @see ExpressionRateLimiterKeyResolver 自定义表达式，通过 {@link #keyArg()} 计算
      */
     Class<? extends RateLimiterKeyResolver> keyResolver() default DefaultRateLimiterKeyResolver.class;
     /**

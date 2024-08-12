@@ -29,6 +29,18 @@ spring:
       write-durations-as-timestamps: true # 设置 Duration 的格式，使用时间戳
       fail-on-empty-beans: false # 允许序列化无属性的 Bean
 
+  ############################## [Redis 配置项] ##############################
+  data:
+    redis:
+      repositories:
+        enabled: false # 项目未使用到 Spring Data Redis 的 Repository，所以直接禁用，保证启动速度
+
+  ############################## [Cache 配置项] ##############################
+  cache:
+    type: REDIS
+    redis:
+      time-to-live: 1h # 设置过期时间为 1 小时
+
   ############################## [kafka 配置项] ##############################
   kafka:
     producer:

@@ -35,6 +35,12 @@
             <artifactId>lock4j-redisson-spring-boot-starter</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- Spring aop 切面支持 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
