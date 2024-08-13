@@ -1,6 +1,7 @@
 package com.liboshuai.starlink.slr.framework.protection.signature.core.annotation;
 
-import cn.iocoder.yudao.framework.common.exception.enums.GlobalErrorCodeConstants;
+
+import com.liboshuai.starlink.slr.framework.common.exception.enums.GlobalErrorCodeConstants;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;

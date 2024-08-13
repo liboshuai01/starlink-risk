@@ -1,7 +1,8 @@
 package com.liboshuai.starlink.slr.framework.protection.idempotent.core.annotation;
 
-import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.DefaultIdempotentKeyResolver;
+
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.IdempotentKeyResolver;
+import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.DefaultIdempotentKeyResolver;
 import com.liboshuai.starlink.slr.framework.protection.idempotent.core.keyresolver.impl.ExpressionIdempotentKeyResolver;
 
 import java.lang.annotation.ElementType;
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 幂等注解
  *
- * @author 李博帅
+ * @author 芋道源码
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

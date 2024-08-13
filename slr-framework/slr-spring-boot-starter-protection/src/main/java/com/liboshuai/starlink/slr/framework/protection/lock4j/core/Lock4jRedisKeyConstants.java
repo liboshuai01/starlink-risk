@@ -3,7 +3,7 @@ package com.liboshuai.starlink.slr.framework.protection.lock4j.core;
 /**
  * Lock4j Redis Key 枚举类
  *
- * @author 李博帅
+ * @author 芋道源码
  */
 public interface Lock4jRedisKeyConstants {
 

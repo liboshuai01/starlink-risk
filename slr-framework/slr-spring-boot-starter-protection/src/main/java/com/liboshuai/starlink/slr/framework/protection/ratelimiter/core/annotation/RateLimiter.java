@@ -46,9 +46,9 @@ public @interface RateLimiter {
     /**
      * 使用的 Key 解析器
      *
-     * @see DefaultRateLimiterKeyResolver 全局级别
-     * @see ClientIpRateLimiterKeyResolver 用户 IP 级别
-     * @see ServerNodeRateLimiterKeyResolver 服务器 Node 级别
+     * @see DefaultRateLimiterKeyResolver 全局级别（根据方法名限流）
+     * @see ClientIpRateLimiterKeyResolver 用户 IP 级别（根据方法名+IP限流）
+     * @see ServerNodeRateLimiterKeyResolver 服务器 Node 级别（根据方法名+node限流）
      * @see ExpressionRateLimiterKeyResolver 自定义表达式，通过 {@link #keyArg()} 计算
      */
     Class<? extends RateLimiterKeyResolver> keyResolver() default DefaultRateLimiterKeyResolver.class;

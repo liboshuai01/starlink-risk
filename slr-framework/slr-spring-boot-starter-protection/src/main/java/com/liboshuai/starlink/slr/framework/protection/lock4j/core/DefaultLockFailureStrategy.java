@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.framework.protection.lock4j.core;
 
+import com.baomidou.lock.LockFailureStrategy;
 import com.liboshuai.starlink.slr.framework.common.exception.ServiceException;
 import com.liboshuai.starlink.slr.framework.common.exception.enums.GlobalErrorCodeConstants;
-import com.baomidou.lock.LockFailureStrategy;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
