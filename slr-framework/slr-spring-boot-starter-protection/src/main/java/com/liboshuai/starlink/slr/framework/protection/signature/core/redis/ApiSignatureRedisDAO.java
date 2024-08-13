@@ -18,11 +18,11 @@ public class ApiSignatureRedisDAO {
     /**
      * 验签随机数
      *
-     * KEY 格式：signature_nonce:%s // 参数为 随机数
+     * KEY 格式：slr:signature_nonce:%s // 参数为 随机数
      * VALUE 格式：String
      * 过期时间：不固定
      */
-    private static final String SIGNATURE_NONCE = "api_signature_nonce:%s";
+    private static final String SIGNATURE_NONCE = "slr:api_signature_nonce:%s";
 
     /**
      * 签名密钥
@@ -32,7 +32,7 @@ public class ApiSignatureRedisDAO {
      * VALUE 格式：String
      * 过期时间：永不过期（预加载到 Redis）
      */
-    private static final String SIGNATURE_APPID = "api_signature_app";
+    private static final String SIGNATURE_APPID = "slr:api_signature_app";
 
     // ========== 验签随机数 ==========
 
