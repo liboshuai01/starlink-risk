@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.framework.protection.signature.config;
 
-import com.liboshuai.starlink.slr.framework.redis.config.SlrRedisAutoConfiguration;
 import com.liboshuai.starlink.slr.framework.protection.signature.core.aop.ApiSignatureAspect;
 import com.liboshuai.starlink.slr.framework.protection.signature.core.redis.ApiSignatureRedisDAO;
+import com.liboshuai.starlink.slr.framework.redis.config.SlrRedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -10,7 +10,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 /**
  * HTTP API 签名的自动配置类
  *
- * @author 李博帅
+ * @author Zhougang
  */
 @AutoConfiguration(after = SlrRedisAutoConfiguration.class)
 public class SlrApiSignatureAutoConfiguration {

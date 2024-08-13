@@ -1,6 +1,6 @@
 package com.liboshuai.starlink.slr.framework.protection.signature.core.annotation;
 
-import com.liboshuai.starlink.slr.framework.common.exception.enums.GlobalErrorCodeConstants;
+import cn.iocoder.yudao.framework.common.exception.enums.GlobalErrorCodeConstants;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * HTTP API 签名注解
  *
- * @author 李博帅
+ * @author Zhougang
  */
 @Inherited
 @Documented

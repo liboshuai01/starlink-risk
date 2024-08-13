@@ -23,10 +23,11 @@ import java.util.TreeMap;
 
 import static com.liboshuai.starlink.slr.framework.common.exception.enums.GlobalErrorCodeConstants.BAD_REQUEST;
 
+
 /**
  * 拦截声明了 {@link ApiSignature} 注解的方法，实现签名
  *
- * @author 李博帅
+ * @author Zhougang
  */
 @Aspect
 @Slf4j
