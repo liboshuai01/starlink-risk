@@ -1,5 +1,5 @@
 server:
-  port: 30000
+  port: 30010
   servlet:
     encoding:
       enabled: true
@@ -10,7 +10,7 @@ spring:
   profiles:
     active: @profilesActive@
   application:
-    name: slr-connector
+    name: slr-admin
   main:
     allow-circular-references: true # 允许循环依赖，因为项目是三层架构，无法避免这个情况。
 
@@ -135,8 +135,8 @@ debug: false
 slr:
   # Swagger 配置
   swagger:
-    title: 星链风控系统-数据连接
-    description: 实时动态规则风控系统-数据连接模块
+    title: 星链风控系统-后台管理
+    description: 实时动态规则风控系统-后台管理模块
     author: 李博帅
     version: 1.0
     url: https://liboshuai.com

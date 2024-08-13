@@ -1,0 +1,12 @@
+spring:
+  kafka:
+    producer:
+      bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
+    consumer:
+      bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
+      group-id: slr-connector
+
+slr-connector:
+  load-test:
+    # 生成测试数据写入的文件路径
+    file-path: /slr/load_test_file/source.json

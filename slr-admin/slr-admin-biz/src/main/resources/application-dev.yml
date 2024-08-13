@@ -1,0 +1,17 @@
+spring:
+  redis:
+    cluster:
+      nodes: rocky:6381,rocky:6382,rocky:6383,rocky:6384,rocky:6385,rocky:6386
+    database: 0
+    password: Rongshu@2024
+  kafka:
+    producer:
+      bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
+    consumer:
+      bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
+      group-id: slr
+
+slr-connector:
+  load-test:
+    # 生成测试数据写入的文件路径
+    file-path: /slr/load_test_file/source.json
