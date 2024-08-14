@@ -133,6 +133,9 @@ debug: false
 
 ############################## [slr-connector 配置项] ##############################
 slr:
+  info:
+    # Mapper 扫描包路径
+    base-package: com.liboshuai.starlink.slr
   # Swagger 配置
   swagger:
     title: 星链风控系统-后台管理
