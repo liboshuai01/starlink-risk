@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.framework.mybatis.core.handler;
 
-import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseDO;
+import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import org.apache.ibatis.reflection.MetaObject;
 
 import java.time.LocalDateTime;
@@ -30,8 +30,7 @@ public class DefaultDBFieldHandler implements MetaObjectHandler {
             if (Objects.isNull(baseDO.getUpdateTime())) {
                 baseDO.setUpdateTime(current);
             }
-
-            // 因暂用户认证功能，临时固定userId为1
+            // 临时设置为1L
             Long userId = 1L;
             // 当前登录用户不为空，创建人为空，则当前登录用户为创建人
             if (Objects.nonNull(userId) && Objects.isNull(baseDO.getCreator())) {
@@ -54,7 +53,7 @@ public class DefaultDBFieldHandler implements MetaObjectHandler {
 
         // 当前登录用户不为空，更新人为空，则当前登录用户为更新人
         Object modifier = getFieldValByName("updater", metaObject);
-        // 因暂用户认证功能，临时固定userId为1
+        // 临时设置为1L
         Long userId = 1L;
         if (Objects.nonNull(userId) && Objects.isNull(modifier)) {
             setFieldValByName("updater", userId.toString(), metaObject);

@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.framework.datasource.config;
 
-import com.alibaba.druid.spring.boot.autoconfigure.properties.DruidStatProperties;
 import com.liboshuai.starlink.slr.framework.datasource.core.filter.DruidAdRemoveFilter;
+import com.alibaba.druid.spring.boot.autoconfigure.properties.DruidStatProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 /**
  * 数据库配置类
  *
- * @author 李博帅
+ * @author 芋道源码
  */
 @AutoConfiguration
 @EnableTransactionManagement(proxyTargetClass = true) // 启动事务管理

@@ -1,0 +1,3 @@
+com.liboshuai.starlink.slr.framework.datasource.config.SlrDataSourceAutoConfiguration
+com.liboshuai.starlink.slr.framework.mybatis.config.SlrMybatisAutoConfiguration
+com.liboshuai.starlink.slr.framework.translate.config.SlrTranslateAutoConfiguration

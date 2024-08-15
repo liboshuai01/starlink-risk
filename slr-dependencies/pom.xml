@@ -25,7 +25,7 @@
         <mybatis.version>3.5.16</mybatis.version>
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <mybatis-plus-generator.version>3.5.7</mybatis-plus-generator.version>
-        <sharding-jdbc.version>4.1.1</sharding-jdbc.version>
+        <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
         <mybatis-plus-join.version>1.4.13</mybatis-plus-join.version>
         <easy-trans.version>3.0.5</easy-trans.version>
         <redisson.version>3.32.0</redisson.version>
@@ -182,9 +182,9 @@
                 <version>${mybatis-plus-generator.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
-                <version>${sharding-jdbc.version}</version>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <version>${dynamic-datasource.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.yulichang</groupId>
@@ -204,6 +204,10 @@
                     <exclusion>
                         <groupId>org.springframework.cloud</groupId>
                         <artifactId>spring-cloud-commons</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>checker-qual</artifactId>
+                        <groupId>org.checkerframework</groupId>
                     </exclusion>
                 </exclusions>
             </dependency>
