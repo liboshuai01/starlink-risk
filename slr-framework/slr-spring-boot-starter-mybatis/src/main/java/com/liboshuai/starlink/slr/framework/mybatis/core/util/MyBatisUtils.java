@@ -1,8 +1,6 @@
 package com.liboshuai.starlink.slr.framework.mybatis.core.util;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -10,7 +8,6 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.liboshuai.starlink.slr.framework.common.pojo.PageParam;
 import com.liboshuai.starlink.slr.framework.common.pojo.SortingField;
-import com.liboshuai.starlink.slr.framework.mybatis.core.enums.DbTypeEnum;
 import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -86,21 +83,6 @@ public class MyBatisUtils {
             tableName = tableAlias.getName();
         }
         return new Column(tableName + StringPool.DOT + column);
-    }
-
-    /**
-     * 跨数据库的 find_in_set 实现
-     *
-     * @param column 字段名称
-     * @param value  查询值(不带单引号)
-     * @return sql
-     */
-    public static String findInSet(String column, Object value) {
-        // 这里不用SqlConstants.DB_TYPE，因为它是使用 primary 数据源的 url 推断出来的类型
-        DbType dbType = JdbcUtils.getDbType();
-        return DbTypeEnum.getFindInSetTemplate(dbType)
-                .replace("#{column}", column)
-                .replace("#{value}", StrUtil.toString(value));
     }
 
 }
