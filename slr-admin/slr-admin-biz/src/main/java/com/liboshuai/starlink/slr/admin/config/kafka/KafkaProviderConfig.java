@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.admin.config;
+package com.liboshuai.starlink.slr.admin.config.kafka;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
