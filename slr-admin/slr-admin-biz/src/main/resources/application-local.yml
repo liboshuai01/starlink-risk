@@ -11,8 +11,8 @@ spring:
         enabled: true
         allow: # 设置白名单，不填则允许所有访问
         url-pattern: /druid/*
-        login-username: # 控制台管理用户名和密码
-        login-password:
+        login-username: lbs # 控制台管理用户名和密码
+        login-password: Rongshu@2024
       filter:
         stat:
           enabled: true
@@ -57,8 +57,3 @@ spring:
     consumer:
       bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
       group-id: slr
-
-slr-connector:
-  load-test:
-    # 生成测试数据写入的文件路径
-    file-path: D:\\APerson\\Tmp\\source.json
