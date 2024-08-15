@@ -1,13 +1,17 @@
-package com.liboshuai.starlink.slr.connector.service.kafka.impl;
+package com.liboshuai.starlink.slr.connector.service.event.impl;
 
+import com.liboshuai.starlink.slr.connector.api.dto.EventDTO;
+import com.liboshuai.starlink.slr.connector.mq.provider.EventProvider;
 import com.liboshuai.starlink.slr.connector.pojo.vo.KafkaInfoVO;
-import com.liboshuai.starlink.slr.connector.service.kafka.KafkaTestService;
+import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +20,10 @@ import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Service
-public class KafkaTestServiceImpl implements KafkaTestService {
+public class EventServiceImpl implements EventService {
+
+    @Resource
+    private EventProvider eventProvider;
 
     @Value("${spring.kafka.producer.bootstrap-servers}")
     private String bootstrapServers;
@@ -25,7 +32,7 @@ public class KafkaTestServiceImpl implements KafkaTestService {
      * 获取Kafka信息，包含是否可连接，并获取broker列表、topic列表、消费组列表等
      */
     @Override
-    public KafkaInfoVO getKafkaInfo() {
+    public KafkaInfoVO kafkaInfo() {
         Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
@@ -69,5 +76,11 @@ public class KafkaTestServiceImpl implements KafkaTestService {
             log.error("Failed to connect to Kafka cluster", e);
             return new KafkaInfoVO(bootstrapServers, false, e.getMessage(), null, null, null);
         }
+    }
+
+    @Async("slrAsyncExecutor")
+    @Override
+    public void batchUpload(List<EventDTO> eventDTOList) {
+        eventProvider.batchSend(eventDTOList);
     }
 }

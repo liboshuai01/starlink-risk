@@ -1,13 +1,20 @@
 package com.liboshuai.starlink.slr.connector.config;
 
+import com.liboshuai.starlink.slr.connector.api.enums.ErrorCodeConstants;
+import com.liboshuai.starlink.slr.framework.common.exception.ServerException;
+import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.support.ProducerListener;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.lang.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -74,6 +81,14 @@ public class KafkaProviderConfig {
 
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+        KafkaTemplate<String, Object> kafkaTemplate = new KafkaTemplate<>(producerFactory());
+        kafkaTemplate.setProducerListener(new ProducerListener<String, Object>() {
+            @Override
+            public void onError(ProducerRecord<String, Object> producerRecord,
+                                @Nullable RecordMetadata recordMetadata, Exception exception) {
+                throw ServiceExceptionUtil.exception(ErrorCodeConstants.SEND_TO_KAFKA_ERROR);
+            }
+        });
+        return kafkaTemplate;
     }
 }

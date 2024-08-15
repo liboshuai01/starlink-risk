@@ -12,6 +12,8 @@ spring:
       group-id: slr
 
 slr-connector:
+  kafka:
+    source_topic: slr_event
   load-test:
     # 生成测试数据写入的文件路径
     file-path: /slr/load_test_file/source.json
