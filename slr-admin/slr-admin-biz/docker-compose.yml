@@ -1,20 +1,20 @@
 version: '2.1'
 
 services:
-  slr_connector:
+  slr_admin:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: slr_connector
+    container_name: slr_admin
     restart: always
     ports:
-      - "30000:30000"
+      - "30010:30010"
     volumes:
-      - logs:/slr-connector/logs
-      - data:/slr-connector/data
+      - logs:/slr-admin/logs
+      - data:/slr-admin/data
     extra_hosts:
       - "rocky:10.0.0.7"
-    mem_limit: 16g
+    mem_limit: 10g
 
 volumes:
   data:
