@@ -56,4 +56,11 @@ spring:
       bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
     consumer:
       bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
-      group-id: slr
+      group-id: slr_admin
+
+slr-admin:
+  load-test:
+    file-path: /slr-admin/data
+  snowflake:
+    worker-id: 1
+    datacenter-id: 1

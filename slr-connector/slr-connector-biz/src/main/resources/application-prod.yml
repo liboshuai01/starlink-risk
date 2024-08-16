@@ -1,4 +1,9 @@
 spring:
+  redis:
+    database: 0
+    password: Rongshu@2024
+    host: rocky
+    port: 6390
   kafka:
     producer:
       bootstrap-servers: rocky:9096,rocky:9097,rocky:9098
@@ -7,6 +12,5 @@ spring:
       group-id: slr
 
 slr-connector:
-  load-test:
-    # 生成测试数据写入的文件路径
-    file-path: /slr/load_test_file/source.json
+  kafka:
+    source_topic: slr_event
