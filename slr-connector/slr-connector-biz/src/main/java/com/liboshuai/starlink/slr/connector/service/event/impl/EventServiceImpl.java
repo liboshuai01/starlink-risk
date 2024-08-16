@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.connector.service.event.impl;
 
 import com.liboshuai.starlink.slr.connector.api.dto.EventDTO;
-import com.liboshuai.starlink.slr.connector.mq.provider.EventProvider;
+import com.liboshuai.starlink.slr.connector.kafka.provider.EventProvider;
 import com.liboshuai.starlink.slr.connector.pojo.vo.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import lombok.extern.slf4j.Slf4j;

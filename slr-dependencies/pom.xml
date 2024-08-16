@@ -52,6 +52,7 @@
         <jsoup.version>1.18.1</jsoup.version>
         <lombok.version>1.18.34</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <javafaker.version>1.0.2</javafaker.version>
         <hutool.version>5.8.29</hutool.version>
         <easyexcel.verion>3.3.4</easyexcel.verion>
         <velocity.version>2.3</velocity.version>
@@ -542,6 +543,12 @@
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
                 <version>${jsoup.version}</version>
+            </dependency>
+            <!-- 测试数据生成 -->
+            <dependency>
+                <groupId>com.github.javafaker</groupId>
+                <artifactId>javafaker</artifactId>
+                <version>${javafaker.version}</version>
             </dependency>
 
             <!-- 三方云服务相关 -->
