@@ -81,6 +81,10 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
+                <configuration>
+                    <!-- 指定主main类（防止多个main类问题）-->
+                    <mainClass>com.liboshuai.starlink.slr.connector.ConnectorApplication</mainClass>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

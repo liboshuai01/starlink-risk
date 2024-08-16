@@ -17,6 +17,7 @@
         <module>slr-spring-boot-starter-web</module>
         <module>slr-spring-boot-starter-redis</module>
         <module>slr-spring-boot-starter-protection</module>
+        <module>slr-spring-boot-starter-mybatis</module>
     </modules>
 
 </project>
