@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-
-
 import java.util.List;
 
 import static com.liboshuai.starlink.slr.framework.common.pojo.CommonResult.success;
