@@ -21,8 +21,9 @@ public class MockController {
 
     @GetMapping("/createEventFile")
     @Operation(summary = "生成事件日志文件")
-    public CommonResult<String> createEventFile() {
-        mockService.createEventFile(System.currentTimeMillis(), TimeUnit.DAYS.toMillis(10), 1000);
+    public CommonResult<String> createEventFile(long startMillis, long durationMillis, int perSecondCount) {
+//        mockService.createEventFile(System.currentTimeMillis(), TimeUnit.MINUTES.toMillis(10), 1000);
+        mockService.createEventFile(startMillis, durationMillis, perSecondCount);
         return CommonResult.success("事件日志文件开始生成，请等待......");
     }
 }
