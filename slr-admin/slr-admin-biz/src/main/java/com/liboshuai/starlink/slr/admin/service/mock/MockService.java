@@ -7,5 +7,5 @@ public interface MockService {
      * @param durationMillis 时间跨度
      * @param perSecondCount 每秒生成的时间戳数量
      */
-    void generatorDataToFile(long startMillis, long durationMillis, int perSecondCount);
+    void createEventFile(long startMillis, long durationMillis, int perSecondCount);
 }

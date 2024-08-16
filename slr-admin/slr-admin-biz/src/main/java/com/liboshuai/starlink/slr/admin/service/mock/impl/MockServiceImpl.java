@@ -53,7 +53,7 @@ public class MockServiceImpl implements MockService {
     @Override
     @TakeTime
     @Async("slrAsyncExecutor")
-    public void generatorDataToFile(long startMillis, long durationMillis, int perSecondCount) {
+    public void createEventFile(long startMillis, long durationMillis, int perSecondCount) {
         Faker faker = new Faker(Locale.CHINA);
         // 获取时间戳集合
         Stream<Long> timeStampStream = MockEventUtils.generateTimeStampStream(startMillis, durationMillis, perSecondCount);
