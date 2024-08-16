@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.connector.api.enums;
+package com.liboshuai.starlink.slr.connector.api.constants;
 
 
 import com.liboshuai.starlink.slr.framework.common.exception.ErrorCode;
