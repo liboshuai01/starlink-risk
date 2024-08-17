@@ -10,6 +10,7 @@ import com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.annotati
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -43,6 +44,10 @@ public class EventController {
     @Operation(summary = "批量上送接口")
     public CommonResult<List<EventErrorDTO>> batchUpload(@RequestBody List<EventUploadDTO> eventUploadDTOList) {
         List<EventErrorDTO> eventErrorDTOList = eventService.batchUpload(eventUploadDTOList);
-        return error(ErrorCodeConstants.UPLOAD_EVENT_ERROR, eventErrorDTOList);
+        if (CollectionUtils.isEmpty(eventErrorDTOList)) {
+            return success(null);
+        } else {
+            return error(ErrorCodeConstants.UPLOAD_EVENT_ERROR, eventErrorDTOList);
+        }
     }
 }
