@@ -1,9 +1,12 @@
 package com.liboshuai.starlink.slr.connector.service.event.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.api.dto.EventDTO;
 import com.liboshuai.starlink.slr.connector.kafka.provider.EventProvider;
 import com.liboshuai.starlink.slr.connector.pojo.vo.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
+import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
@@ -81,6 +84,14 @@ public class EventServiceImpl implements EventService {
     @Async("slrAsyncExecutor")
     @Override
     public void batchUpload(List<EventDTO> eventDTOList) {
+        if (CollUtil.isEmpty(eventDTOList)) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_NOT_EMPTY);
+        }
+        // 限制单次上送元素个数
+        int maxSize = 100;
+        if (eventDTOList.size() > maxSize) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_OVER_MAX, maxSize);
+        }
         eventProvider.batchSend(eventDTOList);
     }
 }
