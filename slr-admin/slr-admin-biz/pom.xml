@@ -43,12 +43,6 @@
             <artifactId>slr-admin-api</artifactId>
             <version>${revision}</version>
         </dependency>
-        <!-- slr-connector-aip 数据连接项目api -->
-        <dependency>
-            <groupId>com.liboshuai.starlink</groupId>
-            <artifactId>slr-connector-api</artifactId>
-            <version>${revision}</version>
-        </dependency>
 
         <!-- spring boot 配置所需依赖 -->
         <dependency>

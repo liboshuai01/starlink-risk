@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.connector.api.enums;
+package com.liboshuai.starlink.slr.admin.api.enums;
 
 import com.liboshuai.starlink.slr.framework.common.core.IntArrayValuable;
 import lombok.AllArgsConstructor;

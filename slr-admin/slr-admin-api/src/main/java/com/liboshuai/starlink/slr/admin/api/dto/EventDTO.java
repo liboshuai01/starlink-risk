@@ -1,6 +1,6 @@
-package com.liboshuai.starlink.slr.connector.api.dto;
+package com.liboshuai.starlink.slr.admin.api.dto;
 
-import com.liboshuai.starlink.slr.connector.api.enums.ChannelEnum;
+import com.liboshuai.starlink.slr.admin.api.enums.ChannelEnum;
 import com.liboshuai.starlink.slr.framework.common.validation.InEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

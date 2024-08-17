@@ -1,9 +1,9 @@
 package com.liboshuai.starlink.slr.connector.service.event.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.liboshuai.starlink.slr.admin.api.dto.EventDTO;
 import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
-import com.liboshuai.starlink.slr.connector.api.dto.EventDTO;
-import com.liboshuai.starlink.slr.connector.kafka.provider.EventProvider;
+import com.liboshuai.starlink.slr.connector.dao.kafka.provider.EventProvider;
 import com.liboshuai.starlink.slr.connector.pojo.vo.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
@@ -92,6 +92,7 @@ public class EventServiceImpl implements EventService {
         if (eventDTOList.size() > maxSize) {
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_OVER_MAX, maxSize);
         }
+
         eventProvider.batchSend(eventDTOList);
     }
 }

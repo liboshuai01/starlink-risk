@@ -1,6 +1,6 @@
-package com.liboshuai.starlink.slr.connector.kafka.provider;
+package com.liboshuai.starlink.slr.connector.dao.kafka.provider;
 
-import com.liboshuai.starlink.slr.connector.api.dto.EventDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.EventDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;

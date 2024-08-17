@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.connector.config;
+package com.liboshuai.starlink.slr.connector.common.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;

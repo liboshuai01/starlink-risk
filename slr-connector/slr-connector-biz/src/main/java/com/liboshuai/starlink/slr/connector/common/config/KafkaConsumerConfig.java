@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.connector.config;
+package com.liboshuai.starlink.slr.connector.common.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.beans.factory.annotation.Value;

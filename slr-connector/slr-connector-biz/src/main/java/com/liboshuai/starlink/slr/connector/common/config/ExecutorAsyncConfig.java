@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.connector.config;
+package com.liboshuai.starlink.slr.connector.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
