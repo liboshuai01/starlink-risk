@@ -1,7 +1,8 @@
 package com.liboshuai.starlink.slr.connector.service.event.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.liboshuai.starlink.slr.admin.api.dto.EventDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.EventErrorDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
 import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.dao.kafka.provider.EventProvider;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
@@ -13,12 +14,10 @@ import org.apache.kafka.common.Node;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
@@ -83,16 +82,67 @@ public class EventServiceImpl implements EventService {
 
     @Async("slrAsyncExecutor")
     @Override
-    public void batchUpload(List<EventDTO> eventDTOList) {
-        if (CollUtil.isEmpty(eventDTOList)) {
+    public void batchUpload(List<EventUploadDTO> eventUploadDTOList) {
+        if (CollUtil.isEmpty(eventUploadDTOList)) {
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_NOT_EMPTY);
         }
         // 限制单次上送元素个数
         int maxSize = 100;
-        if (eventDTOList.size() > maxSize) {
+        if (eventUploadDTOList.size() > maxSize) {
             throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_OVER_MAX, maxSize);
         }
+        List<EventErrorDTO> eventErrorDTOList = new ArrayList<>();
+        // 检查并过滤字段值为空的数据
+        checkFilterNotEmpty(eventUploadDTOList, eventErrorDTOList);
+        // 检查并过滤非法渠道的数据
+        checkFilterErrorChanel(eventUploadDTOList, eventErrorDTOList);
 
-        eventProvider.batchSend(eventDTOList);
+        eventProvider.batchSend(eventUploadDTOList);
     }
+
+    /**
+     * 检查并过滤非法渠道的数据
+     */
+    private void checkFilterErrorChanel(List<EventUploadDTO> eventUploadDTOList, List<EventErrorDTO> eventErrorDTOList) {
+
+    }
+
+    /**
+     * 检查并过滤字段值为空的数据
+     */
+    private void checkFilterNotEmpty(List<EventUploadDTO> eventUploadDTOList, List<EventErrorDTO> eventErrorDTOList) {
+        int index = 0;
+        Iterator<EventUploadDTO> iterator = eventUploadDTOList.iterator();
+
+        while (iterator.hasNext()) {
+            EventUploadDTO eventUploadDTO = iterator.next();
+            List<String> reasons = new ArrayList<>();
+
+            checkFilterNotEmpty(eventUploadDTO.getUserId(), "[userId]必须非空", reasons);
+            checkFilterNotEmpty(eventUploadDTO.getUsername(), "[username]必须非空", reasons);
+            checkFilterNotEmpty(eventUploadDTO.getEventId(), "[eventId]必须非空", reasons);
+            checkFilterNotEmpty(eventUploadDTO.getEventTime(), "[eventTime]必须非空", reasons);
+            checkFilterNotEmpty(eventUploadDTO.getChannel(), "[channel]必须非空", reasons);
+
+            if (!reasons.isEmpty()) {
+                EventErrorDTO eventErrorDTO = EventErrorDTO.builder()
+                        .eventUploadDTO(eventUploadDTO)
+                        .index(index)
+                        .reasons(reasons)
+                        .build();
+                eventErrorDTOList.add(eventErrorDTO);
+
+                // 移除字段值为空的对象
+                iterator.remove();
+            }
+            index++;
+        }
+    }
+
+    private void checkFilterNotEmpty(String field, String errorMessage, List<String> reasons) {
+        if (!StringUtils.hasText(field)) {
+            reasons.add(errorMessage);
+        }
+    }
+
 }

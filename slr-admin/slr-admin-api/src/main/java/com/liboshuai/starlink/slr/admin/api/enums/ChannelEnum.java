@@ -1,31 +1,31 @@
 package com.liboshuai.starlink.slr.admin.api.enums;
 
+import com.liboshuai.starlink.slr.admin.api.constants.ChannelConstants;
 import com.liboshuai.starlink.slr.framework.common.core.IntArrayValuable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
 
+/**
+ * 渠道枚举
+ * {@link ChannelConstants}
+ */
 @Getter
 @AllArgsConstructor
-public enum ChannelEnum  implements IntArrayValuable {
+public enum ChannelEnum {
 
-    GAME(0,"游戏"),
-    HJF(1, "花积分");
-
-    public static final int[] ARRAYS = Arrays.stream(values()).mapToInt(ChannelEnum::getCode).toArray();
+    GAME("game","游戏"),
+    HJF("hjf", "花积分"),
+    MALL("mall", "商场")
+    ;
 
     /**
      * 编号
      */
-    private final Integer code;
+    private final String code;
     /**
      * 名称
      */
     private final String name;
-
-    @Override
-    public int[] array() {
-        return ARRAYS;
-    }
 }

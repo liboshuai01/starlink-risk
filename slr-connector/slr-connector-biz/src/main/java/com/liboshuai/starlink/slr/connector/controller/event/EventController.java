@@ -1,6 +1,6 @@
 package com.liboshuai.starlink.slr.connector.controller.event;
 
-import com.liboshuai.starlink.slr.admin.api.dto.EventDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;
@@ -38,8 +38,8 @@ public class EventController {
     @RateLimiter(count = 10000)
     @PostMapping("/batch_upload")
     @Operation(summary = "批量上送接口")
-    public CommonResult<Boolean> batchUpload(@RequestBody @Valid List<EventDTO> eventDTOList) {
-        eventService.batchUpload(eventDTOList);
+    public CommonResult<Boolean> batchUpload(@RequestBody @Valid List<EventUploadDTO> eventUploadDTOList) {
+        eventService.batchUpload(eventUploadDTOList);
         return success(true);
     }
 }
