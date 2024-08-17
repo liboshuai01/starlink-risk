@@ -1,12 +1,6 @@
 package com.liboshuai.starlink.slr.framework.mybatis.core.mapper;
 
 import cn.hutool.core.collection.CollUtil;
-import com.liboshuai.starlink.slr.framework.common.pojo.PageParam;
-import com.liboshuai.starlink.slr.framework.common.pojo.PageResult;
-import com.liboshuai.starlink.slr.framework.common.pojo.SortablePageParam;
-import com.liboshuai.starlink.slr.framework.common.pojo.SortingField;
-import com.liboshuai.starlink.slr.framework.mybatis.core.enums.SqlConstants;
-import com.liboshuai.starlink.slr.framework.mybatis.core.util.MyBatisUtils;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -18,6 +12,12 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.yulichang.base.MPJBaseMapper;
 import com.github.yulichang.interfaces.MPJBaseJoin;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.liboshuai.starlink.slr.framework.common.pojo.PageParam;
+import com.liboshuai.starlink.slr.framework.common.pojo.PageResult;
+import com.liboshuai.starlink.slr.framework.common.pojo.SortablePageParam;
+import com.liboshuai.starlink.slr.framework.common.pojo.SortingField;
+import com.liboshuai.starlink.slr.framework.mybatis.core.enums.SqlConstants;
+import com.liboshuai.starlink.slr.framework.mybatis.core.util.MyBatisUtils;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;

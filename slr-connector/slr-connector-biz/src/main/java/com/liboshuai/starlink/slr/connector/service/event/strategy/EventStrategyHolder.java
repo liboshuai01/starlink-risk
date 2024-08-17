@@ -3,6 +3,7 @@ package com.liboshuai.starlink.slr.connector.service.event.strategy;
 import com.liboshuai.starlink.slr.admin.api.constants.DefaultConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

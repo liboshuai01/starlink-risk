@@ -1,11 +1,11 @@
 package com.liboshuai.starlink.slr.framework.mybatis.config;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.liboshuai.starlink.slr.framework.common.util.collection.SetUtils;
 import com.liboshuai.starlink.slr.framework.mybatis.core.enums.SqlConstants;
 import com.liboshuai.starlink.slr.framework.mybatis.core.util.JdbcUtils;
-import com.baomidou.mybatisplus.annotation.DbType;
-import com.baomidou.mybatisplus.annotation.IdType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;

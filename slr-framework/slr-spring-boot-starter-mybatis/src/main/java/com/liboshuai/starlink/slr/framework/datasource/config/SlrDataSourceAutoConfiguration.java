@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.framework.datasource.config;
 
-import com.liboshuai.starlink.slr.framework.datasource.core.filter.DruidAdRemoveFilter;
 import com.alibaba.druid.spring.boot.autoconfigure.properties.DruidStatProperties;
+import com.liboshuai.starlink.slr.framework.datasource.core.filter.DruidAdRemoveFilter;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

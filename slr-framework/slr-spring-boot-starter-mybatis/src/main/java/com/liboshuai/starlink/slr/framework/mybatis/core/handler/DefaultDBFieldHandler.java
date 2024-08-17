@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.framework.mybatis.core.handler;
 
-import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseDO;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseDO;
 import org.apache.ibatis.reflection.MetaObject;
 
 import java.time.LocalDateTime;

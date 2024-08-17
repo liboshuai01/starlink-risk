@@ -5,7 +5,6 @@ import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 
 import java.util.List;
-import java.util.concurrent.Future;
 
 public interface EventService {
     /**
@@ -14,5 +13,5 @@ public interface EventService {
     KafkaInfoVO kafkaInfo();
 
 
-    Future<List<EventErrorDTO>> upload(EventUploadDTO eventUploadDTO);
+    List<EventErrorDTO> upload(EventUploadDTO eventUploadDTO);
 }

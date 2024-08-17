@@ -6,7 +6,6 @@ import com.liboshuai.starlink.slr.admin.common.component.snowflake.SnowflakeId;
 import com.liboshuai.starlink.slr.admin.common.util.mock.MockEventUtils;
 import com.liboshuai.starlink.slr.admin.service.mock.MockService;
 import com.liboshuai.starlink.slr.connector.api.dto.EventDTO;
-import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
 import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

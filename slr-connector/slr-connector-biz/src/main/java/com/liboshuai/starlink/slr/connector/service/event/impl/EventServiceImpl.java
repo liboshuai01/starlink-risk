@@ -16,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -25,7 +23,6 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -92,12 +89,11 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Async("slrAsyncExecutor")
-    public Future<List<EventErrorDTO>> upload(EventUploadDTO eventUploadDTO) {
+    public List<EventErrorDTO> upload(EventUploadDTO eventUploadDTO) {
         // 初步检验上送事件数据参数
         List<EventErrorDTO> eventErrorDTOList = validateUploadList(eventUploadDTO);
         if (!eventErrorDTOList.isEmpty()) {
-            return AsyncResult.forValue(eventErrorDTOList);
+            return eventErrorDTOList;
         }
         String channel = eventUploadDTO.getChannel(); // 渠道
         List<EventDetailDTO> eventDetailDTOList = eventUploadDTO.getEventDetailDTOList(); // 上送事件详情集合
@@ -109,10 +105,10 @@ public class EventServiceImpl implements EventService {
         // 对象转换
         List<EventKafkaDTO> eventKafkaDTOList = covert(channel, eventDetailDTOList);
 
-        // 推送数据到kafka
+        // 异步推送数据到kafka
         eventProvider.batchSend(eventKafkaDTOList);
 
-        return AsyncResult.forValue(eventErrorDTOList);
+        return eventErrorDTOList;
     }
 
     /**

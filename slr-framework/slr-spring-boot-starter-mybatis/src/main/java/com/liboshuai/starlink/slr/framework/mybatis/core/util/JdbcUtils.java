@@ -1,9 +1,9 @@
 package com.liboshuai.starlink.slr.framework.mybatis.core.util;
 
-import com.liboshuai.starlink.slr.framework.common.util.spring.SpringUtils;
-import com.liboshuai.starlink.slr.framework.mybatis.core.enums.DbTypeEnum;
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.mybatisplus.annotation.DbType;
+import com.liboshuai.starlink.slr.framework.common.util.spring.SpringUtils;
+import com.liboshuai.starlink.slr.framework.mybatis.core.enums.DbTypeEnum;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
