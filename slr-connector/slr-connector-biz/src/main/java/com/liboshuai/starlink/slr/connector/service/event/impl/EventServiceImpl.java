@@ -1,12 +1,16 @@
 package com.liboshuai.starlink.slr.connector.service.event.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.liboshuai.starlink.slr.admin.api.constants.ChannelConstants;
 import com.liboshuai.starlink.slr.admin.api.dto.EventErrorDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
+import com.liboshuai.starlink.slr.admin.api.enums.ChannelEnum;
 import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.dao.kafka.provider.EventProvider;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
+import com.liboshuai.starlink.slr.connector.service.event.strategy.EventStrategy;
+import com.liboshuai.starlink.slr.connector.service.event.strategy.EventStrategyHolder;
 import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
@@ -19,6 +23,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,6 +31,9 @@ public class EventServiceImpl implements EventService {
 
     @Resource
     private EventProvider eventProvider;
+
+    @Resource
+    private EventStrategyHolder eventStrategyHolder;
 
     @Value("${spring.kafka.producer.bootstrap-servers}")
     private String bootstrapServers;
@@ -82,30 +90,92 @@ public class EventServiceImpl implements EventService {
 
     @Async("slrAsyncExecutor")
     @Override
-    public void batchUpload(List<EventUploadDTO> eventUploadDTOList) {
-        if (CollUtil.isEmpty(eventUploadDTOList)) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_NOT_EMPTY);
+    public List<EventErrorDTO> batchUpload(List<EventUploadDTO> eventUploadDTOList) {
+        // 初步检验上送事件数据参数
+        List<EventErrorDTO> eventErrorDTOList = validateUploadList(eventUploadDTOList);
+        if (!eventErrorDTOList.isEmpty()) {
+            return eventErrorDTOList;
         }
-        // 限制单次上送元素个数
-        int maxSize = 100;
-        if (eventUploadDTOList.size() > maxSize) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_OVER_MAX, maxSize);
-        }
-        List<EventErrorDTO> eventErrorDTOList = new ArrayList<>();
         // 检查并过滤字段值为空的数据
         checkFilterNotEmpty(eventUploadDTOList, eventErrorDTOList);
         // 检查并过滤非法渠道的数据
-        checkFilterErrorChanel(eventUploadDTOList, eventErrorDTOList);
-
+        checkFilterErrorChannel(eventUploadDTOList, eventErrorDTOList);
+        // 各渠道特别的数据处理逻辑
+        EventStrategy eventStrategy = eventStrategyHolder.getByChannel(eventUploadDTOList.get(0).getChannel());
+        eventStrategy.processAfter(eventUploadDTOList, eventErrorDTOList);
+        // 推送数据到kafka
         eventProvider.batchSend(eventUploadDTOList);
+        return eventErrorDTOList;
     }
+
+    /**
+     * 初步检验上送事件数据参数
+     */
+    private List<EventErrorDTO> validateUploadList(List<EventUploadDTO> eventUploadDTOList) {
+        List<EventErrorDTO> eventErrorDTOList = new ArrayList<>();
+
+        // 判断事件数据集合是否为空
+        if (CollUtil.isEmpty(eventUploadDTOList)) {
+            eventErrorDTOList.add(
+                    EventErrorDTO.builder()
+                            .reasons(Collections.singletonList("上送事件数据集合必须非空"))
+                            .build()
+            );
+            return eventErrorDTOList;
+        }
+
+        int maxSize = 100;
+        // 判断单次上送数据集合元素个数超量
+        if (eventUploadDTOList.size() > maxSize) {
+            eventErrorDTOList.add(
+                    EventErrorDTO.builder()
+                            .reasons(Collections.singletonList("单次上送事件数据集合元素个数必须小于等于" + maxSize))
+                            .build()
+            );
+            return eventErrorDTOList;
+        }
+
+        return eventErrorDTOList;
+    }
+
 
     /**
      * 检查并过滤非法渠道的数据
      */
-    private void checkFilterErrorChanel(List<EventUploadDTO> eventUploadDTOList, List<EventErrorDTO> eventErrorDTOList) {
+    private void checkFilterErrorChannel(List<EventUploadDTO> eventUploadDTOList, List<EventErrorDTO> eventErrorDTOList) {
+        int index = 0;
+        Iterator<EventUploadDTO> iterator = eventUploadDTOList.iterator();
 
+        // 获取所有合法渠道的code
+        Set<String> validChannels = Arrays.stream(ChannelEnum.values())
+                .map(ChannelEnum::getCode)
+                .collect(Collectors.toSet());
+
+        while (iterator.hasNext()) {
+            EventUploadDTO eventUploadDTO = iterator.next();
+            List<String> reasons = new ArrayList<>();
+
+            // 检查渠道是否合法
+            String channel = eventUploadDTO.getChannel();
+            if (!validChannels.contains(channel)) {
+                reasons.add("[channel]非法渠道: " + channel);
+            }
+
+            if (!reasons.isEmpty()) {
+                EventErrorDTO eventErrorDTO = EventErrorDTO.builder()
+                        .eventUploadDTO(eventUploadDTO)
+                        .index(index)
+                        .reasons(reasons)
+                        .build();
+                eventErrorDTOList.add(eventErrorDTO);
+
+                // 移除非法渠道的对象
+                iterator.remove();
+            }
+            index++;
+        }
     }
+
 
     /**
      * 检查并过滤字段值为空的数据

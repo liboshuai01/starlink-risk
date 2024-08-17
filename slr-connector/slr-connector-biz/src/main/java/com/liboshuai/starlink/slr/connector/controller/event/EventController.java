@@ -1,6 +1,8 @@
 package com.liboshuai.starlink.slr.connector.controller.event;
 
+import com.liboshuai.starlink.slr.admin.api.dto.EventErrorDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
+import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;
@@ -14,6 +16,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
+import static com.liboshuai.starlink.slr.framework.common.pojo.CommonResult.error;
 import static com.liboshuai.starlink.slr.framework.common.pojo.CommonResult.success;
 
 @Slf4j
@@ -38,8 +41,8 @@ public class EventController {
     @RateLimiter(count = 10000)
     @PostMapping("/batch_upload")
     @Operation(summary = "批量上送接口")
-    public CommonResult<Boolean> batchUpload(@RequestBody @Valid List<EventUploadDTO> eventUploadDTOList) {
-        eventService.batchUpload(eventUploadDTOList);
-        return success(true);
+    public CommonResult<List<EventErrorDTO>> batchUpload(@RequestBody List<EventUploadDTO> eventUploadDTOList) {
+        List<EventErrorDTO> eventErrorDTOList = eventService.batchUpload(eventUploadDTOList);
+        return error(ErrorCodeConstants.UPLOAD_EVENT_ERROR, eventErrorDTOList);
     }
 }

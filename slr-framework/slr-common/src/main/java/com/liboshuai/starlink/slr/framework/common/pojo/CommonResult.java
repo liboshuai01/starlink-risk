@@ -18,6 +18,7 @@ import java.util.Objects;
 @Data
 public class CommonResult<T> implements Serializable {
 
+    private static final long serialVersionUID = 521402561066323908L;
     /**
      * 错误码
      *
@@ -45,19 +46,28 @@ public class CommonResult<T> implements Serializable {
      * @return 新的 CommonResult 对象
      */
     public static <T> CommonResult<T> error(CommonResult<?> result) {
-        return error(result.getCode(), result.getMsg());
+        return error(result.getCode(), result.getMsg(), null);
     }
 
     public static <T> CommonResult<T> error(Integer code, String message) {
+        return error(code, message, null);
+    }
+
+    public static <T> CommonResult<T> error(Integer code, String message, T data) {
         Assert.isTrue(!GlobalErrorCodeConstants.SUCCESS.getCode().equals(code), "code 必须是错误的！");
         CommonResult<T> result = new CommonResult<>();
         result.code = code;
         result.msg = message;
+        result.data = data;
         return result;
     }
 
     public static <T> CommonResult<T> error(ErrorCode errorCode) {
-        return error(errorCode.getCode(), errorCode.getMsg());
+        return error(errorCode.getCode(), errorCode.getMsg(), null);
+    }
+
+    public static <T> CommonResult<T> error(ErrorCode errorCode, T data) {
+        return error(errorCode.getCode(), errorCode.getMsg(), data);
     }
 
     public static <T> CommonResult<T> success(T data) {
@@ -106,7 +116,7 @@ public class CommonResult<T> implements Serializable {
     }
 
     public static <T> CommonResult<T> error(ServiceException serviceException) {
-        return error(serviceException.getCode(), serviceException.getMessage());
+        return error(serviceException.getCode(), serviceException.getMessage(), null);
     }
 
 }

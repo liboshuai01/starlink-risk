@@ -1,6 +1,7 @@
 package com.liboshuai.starlink.slr.admin.api.dto;
 
 import com.liboshuai.starlink.slr.admin.api.constants.ChannelConstants;
+import com.liboshuai.starlink.slr.admin.api.enums.ChannelEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,7 +42,9 @@ public class EventUploadDTO implements Serializable {
     private String eventTime;
 
     /**
-     * 渠道 {@link ChannelConstants}
+     * 渠道
+     * {@link ChannelConstants}
+     * {@link ChannelEnum}
      */
     private String channel;
 
