@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.liboshuai.starlink.slr.admin.api.dto.EventDTO;
 import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.dao.kafka.provider.EventProvider;
-import com.liboshuai.starlink.slr.connector.pojo.vo.KafkaInfoVO;
+import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
 import lombok.extern.slf4j.Slf4j;

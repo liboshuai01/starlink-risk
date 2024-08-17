@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.connector.controller.event;
 
 import com.liboshuai.starlink.slr.admin.api.dto.EventDTO;
-import com.liboshuai.starlink.slr.connector.pojo.vo.KafkaInfoVO;
+import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;
 import com.liboshuai.starlink.slr.framework.protection.ratelimiter.core.annotation.RateLimiter;

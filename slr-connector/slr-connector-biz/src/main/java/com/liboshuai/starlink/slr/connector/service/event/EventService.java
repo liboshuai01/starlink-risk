@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.connector.service.event;
 
 import com.liboshuai.starlink.slr.admin.api.dto.EventDTO;
-import com.liboshuai.starlink.slr.connector.pojo.vo.KafkaInfoVO;
+import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 
 import java.util.List;
 

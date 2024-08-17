@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.connector.pojo.vo;
+package com.liboshuai.starlink.slr.connector.pojo.vo.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +18,8 @@ import java.util.List;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class KafkaInfoVO implements Serializable {
+    private static final long serialVersionUID = 1291549034802206760L;
+
     private String bootstrapServers;
     private boolean success;
     private String errorMessage;
