@@ -61,8 +61,8 @@ public class MockServiceImpl implements MockService {
         Stream<Long> timeStampStream = MockEventUtils.generateTimeStampStream(startMillis, durationMillis, perSecondCount);
 
         // 生成测试数据并写入文件
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath + File.separator + FILE_NAME), StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath + File.separator + FILE_NAME),
+                StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             timeStampStream.forEach(timeStamp -> {
                 EventDetailDTO eventDetailDTO = EventDetailDTO.builder()
                         .userId(snowflakeId.nextIdStr())
