@@ -1,11 +1,12 @@
 package com.liboshuai.starlink.slr.admin.service.mock.impl;
 
 import com.github.javafaker.Faker;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.admin.common.annotation.TakeTime;
 import com.liboshuai.starlink.slr.admin.common.component.snowflake.SnowflakeId;
 import com.liboshuai.starlink.slr.admin.common.util.mock.MockEventUtils;
 import com.liboshuai.starlink.slr.admin.service.mock.MockService;
-import com.liboshuai.starlink.slr.connector.api.dto.EventDTO;
 import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
@@ -61,14 +64,18 @@ public class MockServiceImpl implements MockService {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath + File.separator + FILE_NAME), StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             timeStampStream.forEach(timeStamp -> {
-                EventDTO eventDTO = EventDTO.builder()
+                EventDetailDTO eventDetailDTO = EventDetailDTO.builder()
                         .userId(snowflakeId.nextIdStr())
                         .username(MockEventUtils.getUserName())
                         .eventId(snowflakeId.nextIdStr())
                         .eventTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timeStamp))
-                        .channel(MockEventUtils.getChannel())
                         .build();
-                String json = JsonUtils.toJsonString(eventDTO);
+                List<EventDetailDTO> eventDetailDTOS = Collections.singletonList(eventDetailDTO);
+                EventUploadDTO eventUploadDTO = EventUploadDTO.builder()
+                        .channel(MockEventUtils.getChannel())
+                        .eventDetailDTOList(eventDetailDTOS)
+                        .build();
+                String json = JsonUtils.toJsonString(eventUploadDTO);
                 try {
                     writer.write(json);
                     writer.newLine();
