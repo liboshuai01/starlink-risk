@@ -88,8 +88,11 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    /**
+     * 上送事件数据到kafka
+     */
     @Override
-    public List<EventErrorDTO> upload(EventUploadDTO eventUploadDTO) {
+    public List<EventErrorDTO> uploadKafka(EventUploadDTO eventUploadDTO) {
         // 初步检验上送事件数据参数
         List<EventErrorDTO> eventErrorDTOList = validateUploadList(eventUploadDTO);
         if (!eventErrorDTOList.isEmpty()) {

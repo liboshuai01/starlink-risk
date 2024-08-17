@@ -31,7 +31,7 @@ public class EventController {
     /**
      * 获取Kafka信息，包含是否可连接，并获取broker列表、topic列表、消费组列表等
      */
-    @GetMapping("/kafka_info")
+    @GetMapping("/kafka-info")
     @Operation(summary = "获取Kafka信息")
     public CommonResult<KafkaInfoVO> getKafkaInfo() {
         KafkaInfoVO kafkaInfoVO = eventService.kafkaInfo();
@@ -39,10 +39,10 @@ public class EventController {
     }
 
     @RateLimiter(count = 10000)
-    @PostMapping("/batch_upload")
-    @Operation(summary = "批量上送接口")
-    public CommonResult<List<EventErrorDTO>> batchUpload(@RequestBody EventUploadDTO eventUploadDTO) {
-        List<EventErrorDTO> eventErrorDTOList = eventService.upload(eventUploadDTO);
+    @PostMapping("/upload-kafka")
+    @Operation(summary = "上送事件数据到kafka")
+    public CommonResult<List<EventErrorDTO>> uploadKafka(@RequestBody EventUploadDTO eventUploadDTO) {
+        List<EventErrorDTO> eventErrorDTOList = eventService.uploadKafka(eventUploadDTO);
         if (CollectionUtils.isEmpty(eventErrorDTOList)) {
             return success();
         } else {

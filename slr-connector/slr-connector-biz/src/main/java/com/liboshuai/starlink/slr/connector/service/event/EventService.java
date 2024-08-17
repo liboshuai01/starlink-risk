@@ -13,5 +13,8 @@ public interface EventService {
     KafkaInfoVO kafkaInfo();
 
 
-    List<EventErrorDTO> upload(EventUploadDTO eventUploadDTO);
+    /**
+     * 上送事件数据到kafka
+     */
+    List<EventErrorDTO> uploadKafka(EventUploadDTO eventUploadDTO);
 }
