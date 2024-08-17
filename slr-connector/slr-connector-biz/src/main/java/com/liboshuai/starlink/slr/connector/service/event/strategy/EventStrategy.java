@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.connector.service.event.strategy;
 
-import com.liboshuai.starlink.slr.admin.api.dto.EventErrorDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventErrorDTO;
 
 import java.util.List;
 
@@ -12,5 +12,5 @@ public interface EventStrategy {
     /**
      * 数据的前置处理
      */
-    void processAfter(List<EventUploadDTO> eventUploadDTOList, List<EventErrorDTO> eventErrorDTOList);
+    void processAfter(List<EventDetailDTO> eventDetailDTOList, List<EventErrorDTO> eventErrorDTOList);
 }

@@ -1,7 +1,7 @@
-package com.liboshuai.starlink.slr.admin.api.dto;
+package com.liboshuai.starlink.slr.admin.api.dto.event;
 
-import com.liboshuai.starlink.slr.admin.api.constants.ChannelConstants;
-import com.liboshuai.starlink.slr.admin.api.enums.ChannelEnum;
+import com.liboshuai.starlink.slr.admin.api.constants.event.ChannelConstants;
+import com.liboshuai.starlink.slr.admin.api.enums.event.ChannelEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,16 +11,24 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 
 /**
- * 上送kafka的事件DTO
+ * 上送事件Kafka DTO
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class EventUploadDTO implements Serializable {
+public class EventKafkaDTO implements Serializable {
 
     private static final long serialVersionUID = -3125924174631531244L;
+
+    /**
+     * 渠道
+     * {@link ChannelConstants}
+     * {@link ChannelEnum}
+     */
+    private String channel;
+
     /**
      * 用户ID
      */
@@ -40,12 +48,5 @@ public class EventUploadDTO implements Serializable {
      * 事件时间 {yyyy-MM-dd HH:mm:ss}
      */
     private String eventTime;
-
-    /**
-     * 渠道
-     * {@link ChannelConstants}
-     * {@link ChannelEnum}
-     */
-    private String channel;
 
 }

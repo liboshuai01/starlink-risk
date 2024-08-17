@@ -11,6 +11,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public final class ServiceException extends RuntimeException {
 
+    private static final long serialVersionUID = 4645944812175958263L;
+
     /**
      * 业务错误码
      *

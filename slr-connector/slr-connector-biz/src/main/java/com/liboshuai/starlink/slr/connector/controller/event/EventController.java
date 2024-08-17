@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.connector.controller.event;
 
-import com.liboshuai.starlink.slr.admin.api.dto.EventErrorDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventErrorDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
@@ -14,8 +14,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.validation.Valid;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import static com.liboshuai.starlink.slr.framework.common.pojo.CommonResult.error;
 import static com.liboshuai.starlink.slr.framework.common.pojo.CommonResult.success;
@@ -42,10 +43,16 @@ public class EventController {
     @RateLimiter(count = 10000)
     @PostMapping("/batch_upload")
     @Operation(summary = "批量上送接口")
-    public CommonResult<List<EventErrorDTO>> batchUpload(@RequestBody List<EventUploadDTO> eventUploadDTOList) {
-        List<EventErrorDTO> eventErrorDTOList = eventService.batchUpload(eventUploadDTOList);
+    public CommonResult<List<EventErrorDTO>> batchUpload(@RequestBody EventUploadDTO eventUploadDTO) {
+        Future<List<EventErrorDTO>> uploadFuture = eventService.upload(eventUploadDTO);
+        List<EventErrorDTO> eventErrorDTOList;
+        try {
+            eventErrorDTOList = uploadFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
         if (CollectionUtils.isEmpty(eventErrorDTOList)) {
-            return success(null);
+            return success();
         } else {
             return error(ErrorCodeConstants.UPLOAD_EVENT_ERROR, eventErrorDTOList);
         }

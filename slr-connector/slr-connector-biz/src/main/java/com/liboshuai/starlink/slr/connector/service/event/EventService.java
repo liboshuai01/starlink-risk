@@ -1,10 +1,11 @@
 package com.liboshuai.starlink.slr.connector.service.event;
 
-import com.liboshuai.starlink.slr.admin.api.dto.EventErrorDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventErrorDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 
 import java.util.List;
+import java.util.concurrent.Future;
 
 public interface EventService {
     /**
@@ -12,5 +13,6 @@ public interface EventService {
      */
     KafkaInfoVO kafkaInfo();
 
-    List<EventErrorDTO> batchUpload(List<EventUploadDTO> eventUploadDTOList);
+
+    Future<List<EventErrorDTO>> upload(EventUploadDTO eventUploadDTO);
 }

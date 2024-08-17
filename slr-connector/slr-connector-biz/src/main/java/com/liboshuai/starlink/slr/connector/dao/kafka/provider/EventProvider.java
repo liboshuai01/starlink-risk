@@ -1,11 +1,13 @@
 package com.liboshuai.starlink.slr.connector.dao.kafka.provider;
 
-import com.liboshuai.starlink.slr.admin.api.dto.EventUploadDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import javax.annotation.Resource;
@@ -24,8 +26,11 @@ public class EventProvider {
     /**
      * 批量上送事件信息到kafka
      */
-    public void batchSend(List<EventUploadDTO> eventUploadDTOList) {
-        eventUploadDTOList.forEach(eventUploadDTO -> kafkaTemplate.send(sourceTopic, eventUploadDTO)
+    public void batchSend(List<EventKafkaDTO> eventKafkaDTOList) {
+        if (CollectionUtils.isEmpty(eventKafkaDTOList)) {
+            return;
+        }
+        eventKafkaDTOList.forEach(eventUploadDTO -> kafkaTemplate.send(sourceTopic, eventUploadDTO)
                 .addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
 
             @Override

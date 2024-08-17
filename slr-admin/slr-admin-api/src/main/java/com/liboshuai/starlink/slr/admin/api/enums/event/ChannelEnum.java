@@ -1,11 +1,8 @@
-package com.liboshuai.starlink.slr.admin.api.enums;
+package com.liboshuai.starlink.slr.admin.api.enums.event;
 
-import com.liboshuai.starlink.slr.admin.api.constants.ChannelConstants;
-import com.liboshuai.starlink.slr.framework.common.core.IntArrayValuable;
+import com.liboshuai.starlink.slr.admin.api.constants.event.ChannelConstants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.util.Arrays;
 
 /**
  * 渠道枚举

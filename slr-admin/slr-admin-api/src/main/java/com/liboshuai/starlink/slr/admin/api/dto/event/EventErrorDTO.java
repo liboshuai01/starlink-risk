@@ -1,6 +1,5 @@
-package com.liboshuai.starlink.slr.admin.api.dto;
+package com.liboshuai.starlink.slr.admin.api.dto.event;
 
-import com.liboshuai.starlink.slr.admin.api.constants.ChannelConstants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 上送kafka事件错误数据
+ * 上送事件错误数据
  */
 @Data
 @Builder
@@ -35,6 +34,6 @@ public class EventErrorDTO implements Serializable {
     /**
      * 错误数据
      */
-    private EventUploadDTO eventUploadDTO;
+    private EventDetailDTO eventDetailDTO;
 
 }

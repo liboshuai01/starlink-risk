@@ -1,6 +1,6 @@
-package com.liboshuai.starlink.slr.admin.api.constants;
+package com.liboshuai.starlink.slr.admin.api.constants.event;
 
-import com.liboshuai.starlink.slr.admin.api.enums.ChannelEnum;
+import com.liboshuai.starlink.slr.admin.api.enums.event.ChannelEnum;
 
 /**
  * 渠道常量
