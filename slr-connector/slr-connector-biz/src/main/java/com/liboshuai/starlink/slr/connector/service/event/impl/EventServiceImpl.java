@@ -21,8 +21,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -100,8 +102,8 @@ public class EventServiceImpl implements EventService {
         }
         String channel = eventUploadDTO.getChannel(); // 渠道
         List<EventDetailDTO> eventDetailDTOList = eventUploadDTO.getEventDetailDTOList(); // 上送事件详情集合
-        // 检查并过滤字段值为空的数据
-        checkFilterNotEmpty(eventDetailDTOList, eventErrorDTOList);
+        // 检查并过滤非法数据
+        checkAndFilter(eventDetailDTOList, eventErrorDTOList);
         // 各渠道特别的数据处理逻辑
         EventStrategy eventStrategy = eventStrategyHolder.getByChannel(channel);
         eventStrategy.processAfter(eventDetailDTOList, eventErrorDTOList);
@@ -174,9 +176,9 @@ public class EventServiceImpl implements EventService {
     }
 
     /**
-     * 检查并过滤字段值为空的数据
+     * 检查并过滤非法数据
      */
-    private void checkFilterNotEmpty(List<EventDetailDTO> eventDetailDTOList, List<EventErrorDTO> eventErrorDTOList) {
+    private void checkAndFilter(List<EventDetailDTO> eventDetailDTOList, List<EventErrorDTO> eventErrorDTOList) {
         int index = 0;
         Iterator<EventDetailDTO> iterator = eventDetailDTOList.iterator();
 
@@ -184,10 +186,14 @@ public class EventServiceImpl implements EventService {
             EventDetailDTO eventDetailDTO = iterator.next();
             List<String> reasons = new ArrayList<>();
 
-            checkFilterNotEmpty(eventDetailDTO.getUserId(), "[userId]必须非空", reasons);
-            checkFilterNotEmpty(eventDetailDTO.getUsername(), "[username]必须非空", reasons);
-            checkFilterNotEmpty(eventDetailDTO.getEventId(), "[eventId]必须非空", reasons);
-            checkFilterNotEmpty(eventDetailDTO.getEventTime(), "[eventTime]必须非空", reasons);
+            // 效验各字段值是否非空
+            checkNotEmpty(eventDetailDTO, EventDetailDTO::getUserId, reasons);
+            checkNotEmpty(eventDetailDTO, EventDetailDTO::getUsername, reasons);
+            checkNotEmpty(eventDetailDTO, EventDetailDTO::getEventId, reasons);
+            checkNotEmpty(eventDetailDTO, EventDetailDTO::getEventTimestamp, reasons);
+
+            // 校验eventTimestamp字段值是否合法
+            checkEventTimestamp(eventDetailDTO, EventDetailDTO::getEventTimestamp, reasons);
 
             if (!reasons.isEmpty()) {
                 EventErrorDTO eventErrorDTO = EventErrorDTO.builder()
@@ -204,9 +210,49 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void checkFilterNotEmpty(String field, String errorMessage, List<String> reasons) {
-        if (!StringUtils.hasText(field)) {
-            reasons.add(errorMessage);
+    /**
+     * 校验eventTimestamp字段值是否合法
+     */
+    private <T> void checkEventTimestamp(EventDetailDTO eventDetailDTO, Function<EventDetailDTO, T> getter, List<String> reasons) {
+        try {
+            Field field = getFieldFromGetter(getter);
+            Long value = (Long) field.get(eventDetailDTO);
+            if (value == null || String.valueOf(value).length() != 13) {
+                reasons.add("[" + field.getName() + "]必须为13位毫秒级别时间戳");
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    /**
+     * 检查指定字段值是否为空，添加错误信息
+     */
+    private <T> void checkNotEmpty(EventDetailDTO eventDetailDTO, Function<EventDetailDTO, T> getter, List<String> reasons) {
+        try {
+            Field field = getFieldFromGetter(getter);
+            Object value = field.get(eventDetailDTO);
+            if (value == null || (value instanceof String && !StringUtils.hasText((String) value))) {
+                reasons.add("[" + field.getName() + "]必须非空");
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    /**
+     * 通过方法引用获取字段名
+     */
+    private <T> Field getFieldFromGetter(Function<EventDetailDTO, T> getter) {
+        try {
+            String methodName = getter.getClass().getDeclaredMethods()[0].getName();
+            String fieldName = methodName.startsWith("get") ? methodName.substring(3) : methodName;
+            fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
+            Field field = EventDetailDTO.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field;
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -1,6 +1,5 @@
 package com.liboshuai.starlink.slr.admin.service.mock.impl;
 
-import com.github.javafaker.Faker;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.admin.common.annotation.TakeTime;
@@ -21,10 +20,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -46,7 +45,7 @@ public class MockServiceImpl implements MockService {
     private static final String FILE_NAME = "event.log";
 
     /**
-     * 生成测试数据并写入文件
+     * 创建事件数据文件（文件内容为单条上送模式）
      *
      * @param startMillis    开始的时间戳
      * @param durationMillis 时间跨度
@@ -55,8 +54,7 @@ public class MockServiceImpl implements MockService {
     @Override
     @TakeTime
     @Async("slrAsyncExecutor")
-    public void createEventFile(long startMillis, long durationMillis, int perSecondCount) {
-        Faker faker = new Faker(Locale.CHINA);
+    public void createEventFileSingleMode(long startMillis, long durationMillis, int perSecondCount) {
         // 获取时间戳集合
         Stream<Long> timeStampStream = MockEventUtils.generateTimeStampStream(startMillis, durationMillis, perSecondCount);
 
@@ -68,7 +66,7 @@ public class MockServiceImpl implements MockService {
                         .userId(snowflakeId.nextIdStr())
                         .username(MockEventUtils.getUserName())
                         .eventId(snowflakeId.nextIdStr())
-                        .eventTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timeStamp))
+                        .eventTimestamp(timeStamp)
                         .build();
                 List<EventDetailDTO> eventDetailDTOS = Collections.singletonList(eventDetailDTO);
                 EventUploadDTO eventUploadDTO = EventUploadDTO.builder()
@@ -84,6 +82,72 @@ public class MockServiceImpl implements MockService {
                     throw new RuntimeException(e);
                 }
             });
+            writer.flush();
+        } catch (IOException e) {
+            log.error("创建 BufferedWriter 出错: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 创建事件数据文件（文件内容为批量上送模式）
+     * 
+     * @param startMillis    开始的时间戳
+     * @param durationMillis 时间跨度
+     * @param perSecondCount 每秒生成的时间戳数量
+     */
+    @Override
+    @TakeTime
+    @Async("slrAsyncExecutor")
+    public void createEventFileBatchMode(long startMillis, long durationMillis, int perSecondCount) {
+        // 获取时间戳集合
+        List<Long> timeStamps = MockEventUtils.generateTimeStampStream(startMillis, durationMillis, perSecondCount)
+                .collect(Collectors.toList());
+
+        // 生成测试数据并写入文件
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath + File.separator + FILE_NAME),
+                StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+
+            List<EventDetailDTO> eventDetailDTOS = new ArrayList<>();
+
+            for (Long timeStamp : timeStamps) {
+                EventDetailDTO eventDetailDTO = EventDetailDTO.builder()
+                        .userId(snowflakeId.nextIdStr())
+                        .username(MockEventUtils.getUserName())
+                        .eventId(snowflakeId.nextIdStr())
+                        .eventTimestamp(timeStamp)
+                        .build();
+                eventDetailDTOS.add(eventDetailDTO);
+
+                // 每50个EventDetailDTO对象创建一个EventUploadDTO对象
+                if (eventDetailDTOS.size() == 50) {
+                    EventUploadDTO eventUploadDTO = EventUploadDTO.builder()
+                            .channel(MockEventUtils.getChannel())
+                            .eventDetailDTOList(new ArrayList<>(eventDetailDTOS))
+                            .build();
+                    String json = JsonUtils.toJsonString(eventUploadDTO);
+                    try {
+                        writer.write(json);
+                        writer.newLine();
+                    } catch (IOException e) {
+                        log.error("生成测试数据并写入文件异常: {}", e.getMessage(), e);
+                        throw new RuntimeException(e);
+                    }
+                    eventDetailDTOS.clear(); // 清空列表，准备存储下一个50个EventDetailDTO
+                }
+            }
+
+            // 如果最后还有未写入的EventDetailDTO对象
+            if (!eventDetailDTOS.isEmpty()) {
+                EventUploadDTO eventUploadDTO = EventUploadDTO.builder()
+                        .channel(MockEventUtils.getChannel())
+                        .eventDetailDTOList(eventDetailDTOS)
+                        .build();
+                String json = JsonUtils.toJsonString(eventUploadDTO);
+                writer.write(json);
+                writer.newLine();
+            }
+
             writer.flush();
         } catch (IOException e) {
             log.error("创建 BufferedWriter 出错: {}", e.getMessage(), e);

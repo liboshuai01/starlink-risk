@@ -35,8 +35,8 @@ public class EventDetailDTO implements Serializable {
     private String eventId;
 
     /**
-     * 事件时间 {yyyy-MM-dd HH:mm:ss}
+     * 事件时间戳（毫秒级别13位）
      */
-    private String eventTime;
+    private Long eventTimestamp;
 
 }

@@ -18,11 +18,17 @@ public class MockController {
     @Resource
     private MockService mockService;
 
-    @GetMapping("/createEventFile")
-    @Operation(summary = "生成事件日志文件")
+    @GetMapping("/createEventFileSingleMode")
+    @Operation(summary = "创建事件数据文件（文件内容为单条上送模式）")
     public CommonResult<String> createEventFile(long startMillis, long durationMillis, int perSecondCount) {
-//        mockService.createEventFile(System.currentTimeMillis(), TimeUnit.MINUTES.toMillis(10), 1000);
-        mockService.createEventFile(startMillis, durationMillis, perSecondCount);
+        mockService.createEventFileSingleMode(startMillis, durationMillis, perSecondCount);
+        return CommonResult.success("事件日志文件开始生成，请等待......");
+    }
+
+    @GetMapping("/createEventFileBatchMode")
+    @Operation(summary = "创建事件数据文件（文件内容为批量上送模式）")
+    public CommonResult<String> createEventFileBatchMode(long startMillis, long durationMillis, int perSecondCount) {
+        mockService.createEventFileBatchMode(startMillis, durationMillis, perSecondCount);
         return CommonResult.success("事件日志文件开始生成，请等待......");
     }
 }
