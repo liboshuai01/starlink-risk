@@ -2,11 +2,11 @@ package com.liboshuai.starlink.slr.admin.service.mock.impl;
 
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
-import com.liboshuai.starlink.slr.admin.common.annotation.TakeTime;
 import com.liboshuai.starlink.slr.admin.common.component.snowflake.SnowflakeId;
 import com.liboshuai.starlink.slr.admin.common.util.mock.MockEventUtils;
 import com.liboshuai.starlink.slr.admin.service.mock.MockService;
 import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
+import com.liboshuai.starlink.slr.framework.takeTime.core.aop.TakeTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;

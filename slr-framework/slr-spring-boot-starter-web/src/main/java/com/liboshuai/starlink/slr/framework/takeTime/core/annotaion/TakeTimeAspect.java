@@ -1,5 +1,8 @@
-package com.liboshuai.starlink.slr.admin.common.aspct;
+package com.liboshuai.starlink.slr.framework.takeTime.core.annotaion;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
+import com.alibaba.ttl.TransmittableThreadLocal;
 import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -7,7 +10,6 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -17,22 +19,21 @@ import java.util.Objects;
 
 @Slf4j
 @Aspect
-@Component
 public class TakeTimeAspect {
     //统计请求的处理时间
-    ThreadLocal<Long> startTime = new ThreadLocal<>();
-    ThreadLocal<Long> endTime = new ThreadLocal<>();
+    TransmittableThreadLocal<Long> startTime = new TransmittableThreadLocal<>();
+    TransmittableThreadLocal<Long> endTime = new TransmittableThreadLocal<>();
 
     /**
      * 带有@TakeTime注解的方法
      */
-    @Pointcut("@annotation(com.liboshuai.starlink.slr.admin.common.annotation.TakeTime)")
+    @Pointcut("@annotation(com.liboshuai.starlink.slr.framework.takeTime.core.aop.TakeTime)")
     public void TakeTime() {
 
     }
 
     @Before("TakeTime()")
-    public void doBefore(JoinPoint joinPoint) throws Throwable {
+    public void doBefore(JoinPoint joinPoint) {
         // 获取方法的名称
         String methodName = joinPoint.getSignature().getName();
         // 获取方法入参
@@ -48,24 +49,27 @@ public class TakeTimeAspect {
             HttpServletRequest httpServletRequest = attributes.getRequest();
             requestUrl = httpServletRequest.getRequestURL().toString();
         }
-
-        log.info("==================================================");
-        log.info("进入方法: [{}] 参数: {}", methodName, sb);
         startTime.set(System.currentTimeMillis());
+        log.info("==================================================");
+        log.info("方法名称: [{}] ", methodName);
+        log.info("方法参数: {}", sb);
         log.info("请求URL: [{}]", requestUrl);
-        log.info("开始时间: [{}] ({})", new Date(startTime.get()), startTime.get());
+        log.info("开始时间: [{}]", DateUtil.format(new Date(startTime.get()), DatePattern.NORM_DATETIME_MS_PATTERN));
         log.info("--------------------------------------------------");
     }
 
     @AfterReturning(returning = "ret", pointcut = "TakeTime()")
     public void doAfterReturning(JoinPoint joinPoint, Object ret) {
-        //处理完请求后，返回内容
-        log.info("--------------------------------------------------");
-        log.info("方法 [{}] 返回值: {}", joinPoint.getSignature().getName(), JsonUtils.toJsonString(ret));
         endTime.set(System.currentTimeMillis());
-        log.info("结束时间: [{}]", new Date(endTime.get()));
         long duration = endTime.get() - startTime.get();
-        log.info("执行耗时: {} ms ({} seconds)", duration, duration / 1000.0);
+        log.info("--------------------------------------------------");
+        log.info("方法名称: [{}]", joinPoint.getSignature().getName());
+        log.info("方法返回值: {}", JsonUtils.toJsonString(ret));
+        log.info("执行耗时: {} ms / {} seconds / {} minute",
+                duration,
+                String.format("%.2f", duration / 1000.0),
+                String.format("%.2f", duration / 1000.0 / 60.0));
+        log.info("结束时间: [{}]", DateUtil.format(new Date(endTime.get()), DatePattern.NORM_DATETIME_MS_PATTERN));
         log.info("==================================================");
     }
 }
