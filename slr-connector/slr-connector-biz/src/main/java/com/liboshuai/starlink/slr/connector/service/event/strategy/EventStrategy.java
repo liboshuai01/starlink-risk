@@ -1,7 +1,6 @@
 package com.liboshuai.starlink.slr.connector.service.event.strategy;
 
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventErrorDTO;
 
 import java.util.List;
 

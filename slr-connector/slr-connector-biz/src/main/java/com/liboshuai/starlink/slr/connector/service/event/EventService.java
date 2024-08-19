@@ -1,10 +1,7 @@
 package com.liboshuai.starlink.slr.connector.service.event;
 
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventErrorDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
-
-import java.util.List;
 
 public interface EventService {
     /**
