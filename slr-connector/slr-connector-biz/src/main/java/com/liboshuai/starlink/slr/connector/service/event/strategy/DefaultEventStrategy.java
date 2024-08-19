@@ -19,7 +19,7 @@ public class DefaultEventStrategy implements EventStrategy {
      * 数据的前置处理
      */
     @Override
-    public void processAfter(List<EventDetailDTO> eventDetailDTOList, List<EventErrorDTO> eventErrorDTOList) {
+    public void processAfter(List<EventDetailDTO> eventDetailDTOList) {
         // 暂时没有处理逻辑
 
     }

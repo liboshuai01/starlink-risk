@@ -22,6 +22,10 @@ public class ServiceExceptionUtil {
         return exception0(errorCode.getCode(), errorCode.getMsg());
     }
 
+    public static ServiceException exception(ErrorCode errorCode, Object data) {
+        return exception0(errorCode.getCode(), errorCode.getMsg(), data);
+    }
+
     public static ServiceException exception(ErrorCode errorCode, Object... params) {
         return exception0(errorCode.getCode(), errorCode.getMsg(), params);
     }
@@ -29,6 +33,10 @@ public class ServiceExceptionUtil {
     public static ServiceException exception0(Integer code, String messagePattern, Object... params) {
         String message = doFormat(code, messagePattern, params);
         return new ServiceException(code, message);
+    }
+
+    public static ServiceException exception0(Integer code, String message, Object data) {
+        return new ServiceException(code, message, data);
     }
 
     public static ServiceException invalidParamException(String messagePattern, Object... params) {

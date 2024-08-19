@@ -16,5 +16,5 @@ public interface EventService {
     /**
      * 上送事件数据到kafka
      */
-    List<EventErrorDTO> uploadKafka(EventUploadDTO eventUploadDTO);
+    void uploadKafka(EventUploadDTO eventUploadDTO);
 }

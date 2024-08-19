@@ -151,7 +151,7 @@ public class GlobalExceptionHandler {
                 // 忽略日志，避免影响主流程
             }
         }
-        return CommonResult.error(ex.getCode(), ex.getMessage());
+        return CommonResult.error(ex.getCode(), ex.getMessage(), ex.getData());
     }
 
     /**

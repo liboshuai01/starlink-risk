@@ -12,5 +12,5 @@ public interface EventStrategy {
     /**
      * 数据的前置处理
      */
-    void processAfter(List<EventDetailDTO> eventDetailDTOList, List<EventErrorDTO> eventErrorDTOList);
+    void processAfter(List<EventDetailDTO> eventDetailDTOList);
 }

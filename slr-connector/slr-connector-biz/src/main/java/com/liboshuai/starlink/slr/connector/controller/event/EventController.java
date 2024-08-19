@@ -41,12 +41,8 @@ public class EventController {
     @RateLimiter(count = 10000)
     @PostMapping("/upload-kafka")
     @Operation(summary = "上送事件数据到kafka")
-    public CommonResult<List<EventErrorDTO>> uploadKafka(@RequestBody EventUploadDTO eventUploadDTO) {
-        List<EventErrorDTO> eventErrorDTOList = eventService.uploadKafka(eventUploadDTO);
-        if (CollectionUtils.isEmpty(eventErrorDTOList)) {
-            return success();
-        } else {
-            return error(ErrorCodeConstants.UPLOAD_EVENT_ERROR, eventErrorDTOList);
-        }
+    public CommonResult<?> uploadKafka(@RequestBody EventUploadDTO eventUploadDTO) {
+        eventService.uploadKafka(eventUploadDTO);
+        return success();
     }
 }

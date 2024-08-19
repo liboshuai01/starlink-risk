@@ -6,12 +6,16 @@ import com.liboshuai.starlink.slr.admin.api.dto.event.EventErrorDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.admin.api.enums.event.ChannelEnum;
+import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.convert.event.EventConvert;
 import com.liboshuai.starlink.slr.connector.dao.kafka.provider.EventProvider;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.connector.service.event.strategy.EventStrategy;
 import com.liboshuai.starlink.slr.connector.service.event.strategy.EventStrategyHolder;
+import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
+import com.liboshuai.starlink.slr.framework.common.util.object.reflect.ReflectUtils;
+import com.liboshuai.starlink.slr.framework.common.util.object.reflect.SFunction;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
@@ -24,7 +28,6 @@ import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -94,26 +97,25 @@ public class EventServiceImpl implements EventService {
      * 上送事件数据到kafka
      */
     @Override
-    public List<EventErrorDTO> uploadKafka(EventUploadDTO eventUploadDTO) {
-        // 初步检验上送事件数据参数
-        List<EventErrorDTO> eventErrorDTOList = validateUploadList(eventUploadDTO);
-        if (!eventErrorDTOList.isEmpty()) {
-            return eventErrorDTOList;
-        }
+    public void uploadKafka(EventUploadDTO eventUploadDTO) {
         String channel = eventUploadDTO.getChannel(); // 渠道
         List<EventDetailDTO> eventDetailDTOList = eventUploadDTO.getEventDetailDTOList(); // 上送事件详情集合
+
+        // 初步检验上送事件数据参数
+        validateUploadList(eventUploadDTO);
+
         // 检查并过滤非法数据
-        checkAndFilter(eventDetailDTOList, eventErrorDTOList);
+        checkAndFilter(eventDetailDTOList);
+
         // 各渠道特别的数据处理逻辑
         EventStrategy eventStrategy = eventStrategyHolder.getByChannel(channel);
-        eventStrategy.processAfter(eventDetailDTOList, eventErrorDTOList);
+        eventStrategy.processAfter(eventDetailDTOList);
+
         // 对象转换
         List<EventKafkaDTO> eventKafkaDTOList = covert(channel, eventDetailDTOList);
 
         // 异步推送数据到kafka
         eventProvider.batchSend(eventKafkaDTOList);
-
-        return eventErrorDTOList;
     }
 
     /**
@@ -132,53 +134,44 @@ public class EventServiceImpl implements EventService {
     /**
      * 初步检验上送事件数据参数
      */
-    private List<EventErrorDTO> validateUploadList(EventUploadDTO eventUploadDTO) {
-        List<EventErrorDTO> eventErrorDTOList = new ArrayList<>();
-
+    private void validateUploadList(EventUploadDTO eventUploadDTO) {
         // 判断渠道是否合法
         String channel = eventUploadDTO.getChannel();
         Set<String> validChannels = Arrays.stream(ChannelEnum.values())
                 .map(ChannelEnum::getCode)
                 .collect(Collectors.toSet()); // 获取所有合法渠道的code
         if (!validChannels.contains(channel)) {
-            eventErrorDTOList.add(
-                    EventErrorDTO.builder()
-                            .reasons(Collections.singletonList(String.format("上送事件数据渠道[%s]非法", channel)))
-                            .build()
-            );
-            return eventErrorDTOList;
+            String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getChannel);
+            String message = String.format("字段 [%s]: 无效的渠道 [%s]", fieldName, channel);
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, message);
         }
 
         List<EventDetailDTO> eventDetailDTOList = eventUploadDTO.getEventDetailDTOList();
 
         // 判断事件数据集合是否为空
         if (CollUtil.isEmpty(eventDetailDTOList)) {
-            eventErrorDTOList.add(
-                    EventErrorDTO.builder()
-                            .reasons(Collections.singletonList("上送事件数据集合必须非空"))
-                            .build()
-            );
-            return eventErrorDTOList;
+            String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getEventDetailDTOList);
+            String message = String.format("字段 [%s]: 事件数据集合不能为空", fieldName);
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, message);
         }
 
         // 判断单次上送数据集合元素个数超量
         int maxSize = 100;
         if (eventDetailDTOList.size() > maxSize) {
-            eventErrorDTOList.add(
-                    EventErrorDTO.builder()
-                            .reasons(Collections.singletonList("单次上送事件数据集合元素个数必须小于等于" + maxSize))
-                            .build()
-            );
-            return eventErrorDTOList;
+            String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getEventDetailDTOList);
+            String message = String.format("字段 [%s]: 元素个数必须小于等于 [%d]", fieldName, maxSize);
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, message);
         }
-
-        return eventErrorDTOList;
     }
+
 
     /**
      * 检查并过滤非法数据
      */
-    private void checkAndFilter(List<EventDetailDTO> eventDetailDTOList, List<EventErrorDTO> eventErrorDTOList) {
+    private void checkAndFilter(List<EventDetailDTO> eventDetailDTOList) {
+
+        List<EventErrorDTO> eventErrorDTOList = new ArrayList<>();;
+
         int index = 0;
         Iterator<EventDetailDTO> iterator = eventDetailDTOList.iterator();
 
@@ -208,14 +201,18 @@ public class EventServiceImpl implements EventService {
             }
             index++;
         }
+
+        if (!eventErrorDTOList.isEmpty()) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MINOR_ERROR, eventErrorDTOList);
+        }
     }
 
     /**
      * 校验eventTimestamp字段值是否合法
      */
-    private <T> void checkEventTimestamp(EventDetailDTO eventDetailDTO, Function<EventDetailDTO, T> getter, List<String> reasons) {
+    private <T> void checkEventTimestamp(EventDetailDTO eventDetailDTO, SFunction<T> getter, List<String> reasons) {
         try {
-            Field field = getFieldFromGetter(getter);
+            Field field = ReflectUtils.findField(getter);
             Long value = (Long) field.get(eventDetailDTO);
             if (value == null || String.valueOf(value).length() != 13) {
                 reasons.add("[" + field.getName() + "]必须为13位毫秒级别时间戳");
@@ -228,31 +225,11 @@ public class EventServiceImpl implements EventService {
     /**
      * 检查指定字段值是否为空，添加错误信息
      */
-    private <T> void checkNotEmpty(EventDetailDTO eventDetailDTO, Function<EventDetailDTO, T> getter, List<String> reasons) {
-        try {
-            Field field = getFieldFromGetter(getter);
-            Object value = field.get(eventDetailDTO);
-            if (value == null || (value instanceof String && !StringUtils.hasText((String) value))) {
-                reasons.add("[" + field.getName() + "]必须非空");
-            }
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    /**
-     * 通过方法引用获取字段名
-     */
-    private <T> Field getFieldFromGetter(Function<EventDetailDTO, T> getter) {
-        try {
-            String methodName = getter.getClass().getDeclaredMethods()[0].getName();
-            String fieldName = methodName.startsWith("get") ? methodName.substring(3) : methodName;
-            fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
-            Field field = EventDetailDTO.class.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return field;
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
+    private <T> void checkNotEmpty(EventDetailDTO eventDetailDTO, SFunction<T> getter, List<String> reasons) {
+        String fieldName = ReflectUtils.getFieldName(getter);
+        Object fieldValue = ReflectUtils.getFieldValue(eventDetailDTO, getter);
+        if (fieldValue == null || (fieldValue instanceof String && !StringUtils.hasText((String) fieldValue))) {
+            reasons.add("[" + fieldName+ "]必须非空");
         }
     }
 
