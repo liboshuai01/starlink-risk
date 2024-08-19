@@ -143,7 +143,8 @@ public class EventServiceImpl implements EventService {
         if (!validChannels.contains(channel)) {
             String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getChannel);
             String message = String.format("字段 [%s]: 无效的渠道 [%s]", fieldName, channel);
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, message);
+            EventErrorDTO eventErrorDTO = EventErrorDTO.builder().reasons(Collections.singletonList(message)).build();
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, eventErrorDTO);
         }
 
         List<EventDetailDTO> eventDetailDTOList = eventUploadDTO.getEventDetailDTOList();
@@ -152,7 +153,8 @@ public class EventServiceImpl implements EventService {
         if (CollUtil.isEmpty(eventDetailDTOList)) {
             String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getEventDetailDTOList);
             String message = String.format("字段 [%s]: 事件数据集合不能为空", fieldName);
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, message);
+            EventErrorDTO eventErrorDTO = EventErrorDTO.builder().reasons(Collections.singletonList(message)).build();
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, eventErrorDTO);
         }
 
         // 判断单次上送数据集合元素个数超量
@@ -160,7 +162,8 @@ public class EventServiceImpl implements EventService {
         if (eventDetailDTOList.size() > maxSize) {
             String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getEventDetailDTOList);
             String message = String.format("字段 [%s]: 元素个数必须小于等于 [%d]", fieldName, maxSize);
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, message);
+            EventErrorDTO eventErrorDTO = EventErrorDTO.builder().reasons(Collections.singletonList(message)).build();
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, eventErrorDTO);
         }
     }
 
