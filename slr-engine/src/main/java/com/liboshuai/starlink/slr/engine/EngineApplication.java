@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.engine.main;
+package com.liboshuai.starlink.slr.engine;
 
 
 import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
@@ -25,13 +25,9 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @Author: liboshuai
- * @Date: 2023-10-07 14:52
- * 简单静态风控预警
- **/
+
 @Slf4j
-public class StarlinkRiskEngineMain {
+public class EngineApplication {
 
     public static void main(String[] args) {
         try {
