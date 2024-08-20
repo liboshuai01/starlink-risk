@@ -17,4 +17,6 @@ public interface RiskService {
     String addEventInfo(EventInfoVO eventInfoVO);
 
     String addEventAttribute(EventAttributeVO eventAttributeVO);
+
+    void putRule(String ruleCode);
 }

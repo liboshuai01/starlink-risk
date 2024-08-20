@@ -1,16 +1,12 @@
 package com.liboshuai.starlink.slr.admin.pojo.vo.risk;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import static com.liboshuai.starlink.slr.framework.common.util.date.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
-import static com.liboshuai.starlink.slr.framework.common.util.date.DateUtils.TIME_ZONE_DEFAULT;
 
 @Data
 @Builder

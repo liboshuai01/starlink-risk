@@ -10,7 +10,7 @@ import com.liboshuai.starlink.slr.framework.common.exception.ErrorCode;
  */
 public interface ErrorCodeConstants {
 
-    // ========== 公众号账号 1-006-000-000 ============
-    ErrorCode ACCOUNT_NOT_EXISTS = new ErrorCode(1_006_000_000, "公众号账号不存在");
+    ErrorCode RULE_CONDITION_NOT_EXISTS = new ErrorCode(20001, "规则条件不存在");
+    ErrorCode EVENT_INFO_NOT_EXISTS = new ErrorCode(20002, "事件信息不存在");
 
 }

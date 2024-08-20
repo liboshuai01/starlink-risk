@@ -1,5 +1,6 @@
 package com.liboshuai.starlink.slr.admin.service.risk.impl;
 
+import com.liboshuai.starlink.slr.admin.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.admin.common.component.snowflake.SnowflakeId;
 import com.liboshuai.starlink.slr.admin.convert.risk.EventAttributeConvert;
 import com.liboshuai.starlink.slr.admin.convert.risk.EventInfoConvert;
@@ -18,11 +19,15 @@ import com.liboshuai.starlink.slr.admin.pojo.vo.risk.EventInfoVO;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleConditionVO;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleInfoVO;
 import com.liboshuai.starlink.slr.admin.service.risk.RiskService;
+import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -77,5 +82,25 @@ public class RiskServiceImpl implements RiskService {
         eventAttributeEntity.setEventCode(attributeCode);
         eventAttributeMapper.insert(eventAttributeEntity);
         return attributeCode;
+    }
+
+    @Override
+    public void putRule(String ruleCode) {
+        // TODO: 查询逻辑待续
+        RuleInfoEntity ruleInfoEntity = ruleInfoMapper.selectOneByRuleCode(ruleCode);
+        List<RuleConditionEntity> ruleConditionEntityList = ruleConditionMapper.selectListByRuleCode(ruleCode);
+        if (CollectionUtils.isEmpty(ruleConditionEntityList)) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.RULE_CONDITION_NOT_EXISTS);
+        }
+        List<String> eventCodeList = ruleConditionEntityList.stream()
+                .map(RuleConditionEntity::getEventCode)
+                .collect(Collectors.toList());
+        List<EventInfoEntity> eventInfoEntityList = eventInfoMapper.selectListByEventCode(eventCodeList);
+        if (CollectionUtils.isEmpty(eventInfoEntityList)) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.EVENT_INFO_NOT_EXISTS);
+        }
+
+        // TODO：组合规则参数为json
+
     }
 }
