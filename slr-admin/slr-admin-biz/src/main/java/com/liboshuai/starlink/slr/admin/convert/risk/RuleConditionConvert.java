@@ -1,8 +1,6 @@
 package com.liboshuai.starlink.slr.admin.convert.risk;
 
-import com.liboshuai.starlink.slr.admin.api.dto.risk.EventInfoDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.risk.RuleConditionDTO;
-import com.liboshuai.starlink.slr.admin.pojo.entity.risk.EventInfoEntity;
 import com.liboshuai.starlink.slr.admin.pojo.entity.risk.RuleConditionEntity;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleConditionVO;
 import org.mapstruct.Mapper;

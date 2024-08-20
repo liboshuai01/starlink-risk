@@ -8,7 +8,6 @@ import com.liboshuai.starlink.slr.admin.service.risk.RiskService;
 import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;

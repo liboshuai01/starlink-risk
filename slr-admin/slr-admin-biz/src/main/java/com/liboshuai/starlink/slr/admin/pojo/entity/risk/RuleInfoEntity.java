@@ -1,6 +1,5 @@
 package com.liboshuai.starlink.slr.admin.pojo.entity.risk;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseDO;
 import lombok.*;
