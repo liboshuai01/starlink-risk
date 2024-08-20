@@ -1,246 +1,570 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>com.liboshuai.starlink</groupId>
-        <artifactId>starlink-risk</artifactId>
-        <version>${revision}</version>
-    </parent>
 
+    <groupId>com.liboshuai.starlink</groupId>
     <artifactId>slr-engine</artifactId>
-    <packaging>pom</packaging>
-    <version>${revision}</version>
+    <packaging>jar</packaging>
+    <version>1.0</version>
     <name>${artifactId}</name>
 
-    <properties>
-        <target.java.version>1.8</target.java.version>
-        <maven.compiler.source>${target.java.version}</maven.compiler.source>
-        <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <profiles>
+        <!--本地-->
+        <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <profilesActive>local</profilesActive>
+            </properties>
+        </profile>
+        <!--开发-->
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <profilesActive>dev</profilesActive>
+            </properties>
+        </profile>
+        <!--生产-->
+        <profile>
+            <id>prod</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <profilesActive>prod</profilesActive>
+            </properties>
+        </profile>
+    </profiles>
 
-        <!-- Flink 1.12之后有较大的更改, 1.12之前的版本不建议再学 -->
+    <properties>
+        <starlinkRisk.version>1.0</starlinkRisk.version>
+        <spring-boot.version>2.6.11</spring-boot.version>
+        <spring-kafka.version>2.9.13</spring-kafka.version>
+        <risk-engine-common.version>1.0</risk-engine-common.version>
+        <risk-engine-flink.version>1.0</risk-engine-flink.version>
+        <risk-engine-loadTester.version>1.0</risk-engine-loadTester.version>
+        <knife4j.version>4.3.0</knife4j.version>
         <flink.version>1.14.2</flink.version>
-        <!-- 注意：slf4j要使用的版本是 1.7 -->
-        <slf4j.version>1.7.36</slf4j.version>
-        <!-- 日志实现 -->
-        <log4j2.version>2.18.0</log4j2.version>
-        <!-- 即 com.mysql.cj.jdbc.Driver -->
-        <mysql.driver.version>8.0.33</mysql.driver.version>
-        <!-- mysql CDC连接器 -->
-        <!-- 建议使用2.2.x 以上 -->
-        <!-- 可以使用flink cdc动态加载表的特性 -->
-        <mysql-cdc.version>2.2.1</mysql-cdc.version>
-        <!-- scala版本 -->
+        <flink-connector-mysql-cdc.version>2.4.0</flink-connector-mysql-cdc.version>
         <scala.binary.version>2.12</scala.binary.version>
-        <!-- Redis 连接器 -->
+        <commons-math3.version>3.6.1</commons-math3.version>
+        <fastjson2.version>2.0.41</fastjson2.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <mysql.driver.version>5.1.38</mysql.driver.version>
+        <log4j2.version>2.16.0</log4j2.version>
+        <hbase.version>2.0.6</hbase.version>
+        <hadoop.version>3.3.1</hadoop.version>
         <bahire.redis.connector.version>1.1.0</bahire.redis.connector.version>
-        <!-- Jedis版本尽量和Apache-Bachir-Flink自带的Jedis版本一致 -->
-        <jedis.version>3.8.0</jedis.version>
-        <!-- groovy动态脚本语言 -->
-        <groovy.version>4.0.10</groovy.version>
-        <!-- aviator.表达式引擎 -->
+        <zookeeper.version>3.4.10</zookeeper.version>
+        <mybatis.version>2.2.2</mybatis.version>
+        <jedis.version>3.7.1</jedis.version>
+        <clickhouse-jdbc.version>0.3.2-patch11</clickhouse-jdbc.version>
+        <kafka-clients.version>2.4.1</kafka-clients.version>
+        <groovy.version>32.1.3-jre</groovy.version>
+        <hutool.version>5.8.25</hutool.version>
+        <commons-text.version>1.10.0</commons-text.version>
         <aviator.version>5.3.3</aviator.version>
-        <!-- 位图 -->
-        <roaring-bitmap.version>1.2.0</roaring-bitmap.version>
+        <lombok.version>1.18.30</lombok.version>
+        <javafaker.version>1.0.2</javafaker.version>
+        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
+        <spring-boot-maven-plugin.version>2.7.10</spring-boot-maven-plugin.version>
+        <maven-compiler-plugin>3.8.1</maven-compiler-plugin>
+        <maven-surefire-plugin>3.0.0</maven-surefire-plugin>
+
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- Springboot 依赖，注意不要使用 Spring-boot-starter-parent -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- =================== springboot =================== -->
+            <!-- Springboot核心启动，包括了自动配置,日志,yaml -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter</artifactId>
+                <version>${spring-boot.version}</version>
+                <!-- 去掉Springboot的logging依赖 -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!--spring-web-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring-boot.version}</version>
+                <!-- 去掉Springboot的logging依赖 -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!--spring-aop-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <!--spring kafka-->
+            <dependency>
+                <groupId>org.springframework.kafka</groupId>
+                <artifactId>spring-kafka</artifactId>
+                <version>${spring-kafka.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.kafka</groupId>
+                        <artifactId>kafka-clients</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- Springboot从2.2版本起，默认使用Junit5测试框架 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- 子项目 -->
+            <dependency>
+                <groupId>com.liboshuai.starlinkRisk</groupId>
+                <artifactId>starlinkRisk-common</artifactId>
+                <version>${starlinkRisk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.liboshuai.starlinkRisk</groupId>
+                <artifactId>starlinkRisk-engine</artifactId>
+                <version>${starlinkRisk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.liboshuai.starlinkRisk</groupId>
+                <artifactId>starlinkRisk-loadTester</artifactId>
+                <version>${starlinkRisk.version}</version>
+            </dependency>
+
+            <!--knife4j-->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi2-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+
+            <!-- =================== flink =================== -->
+            <!-- Flink基础依赖  -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-java</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!-- Flink流批处理依赖 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!-- Table/SQL Api 依赖 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-api-java</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!-- Table/SQL Api 扩展依赖 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-common</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!-- bridge桥接器，主要负责Table API和 DataStream API的连接支持 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!-- 状态后端 rocksDB -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Flink Planner 依赖 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!-- Flink clients 依赖 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-clients_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Flink Cep 依赖 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-cep_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!-- Flink-Connector-Kafka -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.kafka</groupId>
+                        <artifactId>kafka-clients</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- Flink-Connector-Jdbc -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <!--Flink-cdc-->
+            <dependency>
+                <groupId>com.ververica</groupId>
+                <artifactId>flink-connector-mysql-cdc</artifactId>
+                <version>${flink-connector-mysql-cdc.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.kafka</groupId>
+                        <artifactId>kafka-clients</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- Flink 测试框架 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-test-utils_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+                <classifier>tests</classifier>
+            </dependency>
+
+            <!-- commons-math3 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math3</artifactId>
+                <version>${commons-math3.version}</version>
+            </dependency>
+            <!--- hadoop -->
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- kafka-->
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka-clients.version}</version>
+            </dependency>
+
+
+            <!-- =================== json =================== -->
+            <!--FastJson2-->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2-extension</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+
+            <!-- =================== log =================== -->
+            <!--springboot日志依赖-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-log4j2</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <!-- log4j2依赖 -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <!-- slf4j依赖 -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <!-- log4j2和slf4j桥接依赖 -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+
+            <!-- =================== utils =================== -->
+            <!--guava-->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${groovy.version}</version>
+            </dependency>
+            <!--hutool-->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <!--lombok-->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <!--commons-text-->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons-text.version}</version>
+            </dependency>
+            <!--测试数据生成工具类-->
+            <dependency>
+                <groupId>com.github.javafaker</groupId>
+                <artifactId>javafaker</artifactId>
+                <version>${javafaker.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <!-- common -->
         <dependency>
-            <groupId>com.liboshuai.starlink</groupId>
-            <artifactId>slr-common</artifactId>
+            <groupId>com.liboshuai.starlinkRisk</groupId>
+            <artifactId>starlinkRisk-common</artifactId>
         </dependency>
 
+        <!-- Springboot核心启动，包括了自动配置,日志,yaml -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <!-- 去掉Springboot的logging依赖 -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Springboot从2.2版本起，默认使用Junit5测试框架 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- ========== Flink ========== -->
-        <!-- Flink 基础依赖 -->
+        <!-- =================== flink =================== -->
+        <!-- Flink基础依赖  -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
-        <!-- Flink WebUI -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-runtime-web_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
         </dependency>
         <!-- Flink流批处理依赖 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>scala-library</artifactId>
-                    <groupId>org.scala-lang</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!-- Table/SQL Api 依赖 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java</artifactId>
-            <version>${flink.version}</version>
         </dependency>
         <!-- Table/SQL Api 扩展依赖 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-common</artifactId>
-            <version>${flink.version}</version>
         </dependency>
         <!-- bridge桥接器，主要负责Table API和 DataStream API的连接支持 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
+        </dependency>
+        <!-- 状态后端 rocksDB -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!-- Flink Planner 依赖 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
         </dependency>
         <!-- Flink clients 依赖 -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
-
-        <!-- ========== Flink Connector (连接器) ========== -->
-        <!-- Redis Connector -->
+        <!-- Flink Cep 依赖 -->
         <dependency>
-            <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-redis_${scala.binary.version}</artifactId>
-            <version>${bahire.redis.connector.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>flink-streaming-java_2.12</artifactId>
-                    <groupId>org.apache.flink</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>flink-table-api-java-bridge_2.12</artifactId>
-                    <groupId>org.apache.flink</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>flink-table-api-java</artifactId>
-                    <groupId>org.apache.flink</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-cep_${scala.binary.version}</artifactId>
         </dependency>
-        <!-- Kafka Connector -->
+        <!-- Flink-Connector-Kafka -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>snappy-java</artifactId>
-                    <groupId>org.xerial.snappy</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
-        <!-- Jdbc Connector -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+        </dependency>
+        <!-- Flink-Connector-Jdbc -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
         </dependency>
-
-        <!-- ========== Flink CDC ========== -->
-        <!-- 注意：这里不要选择 flink-connector-mysql-cdc 依赖 -->
-        <!-- mysql CDC连接器 -->
+        <!--Flink-cdc-->
         <dependency>
             <groupId>com.ververica</groupId>
-            <artifactId>flink-sql-connector-mysql-cdc</artifactId>
-            <version>${mysql-cdc.version}</version>
+            <artifactId>flink-connector-mysql-cdc</artifactId>
+        </dependency>
+        <!-- Flink 测试框架 -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-test-utils_${scala.binary.version}</artifactId>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>flink-shaded-guava</artifactId>
-                    <groupId>org.apache.flink</groupId>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+        <!-- commons-math3 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+        </dependency>
+        <!-- hadoop -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--bitMap-->
+        <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+            <version>1.0.6</version>
+        </dependency>
+        <!-- groovy -->
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>4.0.21</version>
+            <type>pom</type>
+        </dependency>
 
-        <!-- ============ log =================== -->
+
+        <!-- ============= 日志 ============= -->
         <!-- log4j2依赖 -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>${log4j2.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>${log4j2.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>log4j-api</artifactId>
-                    <groupId>org.apache.logging.log4j</groupId>
-                </exclusion>
-            </exclusions>
+            <scope>provided</scope>
         </dependency>
         <!-- slf4j依赖 -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- log4j2和slf4j桥接依赖 -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>${log4j2.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>log4j-api</artifactId>
-                    <groupId>org.apache.logging.log4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>log4j-core</artifactId>
-                    <groupId>org.apache.logging.log4j</groupId>
-                </exclusion>
-            </exclusions>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- ============ 其他 =================== -->
-        <!-- Jedis -->
+        <!--lombok-->
         <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>${jedis.version}</version>
-        </dependency>
-        <!-- mysql jdbc driver -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>${mysql.driver.version}</version>
-        </dependency>
-        <!-- Groovy -->
-        <dependency>
-            <groupId>org.apache.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <version>${groovy.version}</version>
-        </dependency>
-        <!-- Aviator -->
-        <dependency>
-            <groupId>com.googlecode.aviator</groupId>
-            <artifactId>aviator</artifactId>
-            <version>${aviator.version}</version>
-        </dependency>
-        <!-- 位图 -->
-        <dependency>
-            <groupId>org.roaringbitmap</groupId>
-            <artifactId>RoaringBitmap</artifactId>
-            <version>${roaring-bitmap.version}</version>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Flink 项目打包插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven-shade-plugin.version}</version>
+                </plugin>
+                <!-- 压测 项目打包插件 -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 
         <finalName>${project.artifactId}-${project.version}</finalName>
         <resources>
@@ -256,39 +580,22 @@
         </resources>
 
         <plugins>
-
-            <!-- Java Compiler -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>${target.java.version}</source>
-                    <target>${target.java.version}</target>
-                </configuration>
-            </plugin>
-
-            <!-- We use the maven-shade plugin to create a fat jar that contains all necessary dependencies. -->
-            <!-- Change the value of <mainClass>...</mainClass> if your program entry point changes. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.1</version>
                 <executions>
-                    <!-- Run shade goal on package phase -->
                     <execution>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <excludes>
-                                    <exclude>org.apache.flink:flink-shaded-force-shading</exclude>
                                     <exclude>com.google.code.findbugs:jsr305</exclude>
                                     <exclude>org.slf4j:*</exclude>
-                                    <exclude>org.apache.logging.log4j:*</exclude>
+                                    <exclude>log4j:*</exclude>
+                                    <exclude>org.apache.hadoop:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>
@@ -303,10 +610,9 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass></mainClass>
+                            <transformers combine.children="append">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -315,4 +621,18 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- 使用 huawei / aliyun 的 Maven 源，提升下载速度 -->
+    <repositories>
+        <repository>
+            <id>huaweicloud</id>
+            <name>huawei</name>
+            <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+        </repository>
+        <repository>
+            <id>aliyunmaven</id>
+            <name>aliyun</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </repository>
+    </repositories>
 </project>

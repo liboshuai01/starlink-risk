@@ -1,4 +1,4 @@
-package com.liboshuai.starlink.slr.engine.util;
+package com.liboshuai.starlink.slr.connector.controller;
 
 public class JedisClusterUtilTest {
 

@@ -12,7 +12,6 @@
 
   <modules>
     <module>slr-connector</module>
-    <module>slr-engine</module>
     <module>slr-framework</module>
     <module>slr-admin</module>
     <module>slr-dependencies</module>
