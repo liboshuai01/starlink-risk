@@ -557,6 +557,13 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- slr-admin-aip 后台管理项目api -->
+        <dependency>
+            <groupId>com.liboshuai.starlink</groupId>
+            <artifactId>slr-admin-api</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

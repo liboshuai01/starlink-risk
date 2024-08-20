@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * 上送事件Kafka DTO
@@ -48,5 +49,10 @@ public class EventKafkaDTO implements Serializable {
      * 事件时间戳（毫秒级别13位）
      */
     private String eventTimestamp;
+
+    /**
+     * 事件属性
+     */
+    private Map<String, Object> eventAttributes;
 
 }
