@@ -342,7 +342,7 @@ public class SliceAggregationFunction extends KeyedBroadcastProcessFunction<Stri
                 // 在创建、更新或读取操作时，我们更新规则状态
                 ruleMap.put(ruleCdcPOAfter.getScenario(), ruleCdcPOAfter);
                 break;
-            // TODO: 目前不需要删除
+            // 目前不需要删除
 //            case "d":
 //                // 在删除操作时，我们删除规则状态
 //                riskRuleState.remove(ruleCdcPOBefore.getRuleScenario());
