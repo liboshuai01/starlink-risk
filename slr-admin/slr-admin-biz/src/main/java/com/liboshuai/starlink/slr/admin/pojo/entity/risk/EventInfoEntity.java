@@ -26,6 +26,4 @@ public class EventInfoEntity extends BaseDO {
     private String eventName; // 事件名称
 
     private String eventDesc; // 事件描述
-
-    private String eventAttribute; // 事件属性
 }

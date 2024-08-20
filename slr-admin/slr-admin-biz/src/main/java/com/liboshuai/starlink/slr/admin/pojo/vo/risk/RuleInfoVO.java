@@ -34,9 +34,6 @@ public class RuleInfoVO implements Serializable {
     @Schema(description = "状态：0-停用，1-启用")
     private Integer status; // 状态：0-停用，1-启用
 
-    @Schema(description = "规则条件编号列表")
-    private String conditionCodeList; // 规则条件编号列表
-
     @Schema(description = "规则条件组合操作符")
     private String conditionOperator; // 规则条件组合操作符
 

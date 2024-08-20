@@ -1,4 +1,5 @@
 drop table slr_event_info;
+drop table slr_event_attribute;
 drop table slr_rule_info;
 drop table slr_rule_condition;
 
@@ -64,7 +65,6 @@ CREATE TABLE `slr_rule_info`
     `rule_name`           varchar(64)     NOT NULL DEFAULT '' COMMENT '规则名称',
     `rule_desc`           varchar(255)    NOT NULL DEFAULT '' COMMENT '规则描述',
     `status`              tinyint         NOT NULL DEFAULT '0' COMMENT '状态：0-停用，1-启用',
-    `condition_code_list` text            NOT NULL COMMENT '规则条件编号列表',
     `condition_operator`  text            NOT NULL COMMENT '规则条件组合操作符',
     `creator`             varchar(255)    NOT NULL DEFAULT '' COMMENT '创建用户',
     `updater`             varchar(255)    NOT NULL DEFAULT '' COMMENT '更新用户',

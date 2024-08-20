@@ -29,7 +29,5 @@ public class RuleInfoEntity extends BaseDO {
 
     private Integer status; // 状态：0-停用，1-启用
 
-    private String conditionCodeList; // 规则条件编号列表
-
     private String conditionOperator; // 规则条件组合操作符
 }

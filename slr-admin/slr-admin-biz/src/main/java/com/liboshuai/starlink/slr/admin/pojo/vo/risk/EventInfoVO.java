@@ -27,7 +27,4 @@ public class EventInfoVO implements Serializable {
     @Schema(description = "事件描述")
     private String eventDesc; // 事件描述
 
-    @Schema(description = "事件属性")
-    private String eventAttribute; // 事件属性
-
 }

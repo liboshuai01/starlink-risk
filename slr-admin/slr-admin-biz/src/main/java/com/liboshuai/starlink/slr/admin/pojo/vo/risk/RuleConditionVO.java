@@ -20,9 +20,6 @@ public class RuleConditionVO implements Serializable {
 
     private static final long serialVersionUID = -8064333448905774995L;
 
-    @TableId
-    private Long id; // ID
-
     @Schema(description = "条件编号")
     private String conditionCode; // 条件编号
 
