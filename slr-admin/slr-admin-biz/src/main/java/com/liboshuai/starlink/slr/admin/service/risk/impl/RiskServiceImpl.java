@@ -91,14 +91,13 @@ public class RiskServiceImpl implements RiskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void putRule(String ruleCode) {
-        // 构建ruleInfoDTO对象
-        RuleInfoDTO ruleInfoDTO = buildRuleInfoDTO(ruleCode);
-        // 插入到数据库
-        RuleJsonEntity ruleJsonEntity = RuleJsonEntity.builder()
-                .ruleCode(ruleInfoDTO.getRuleCode())
-                .ruleJson(JsonUtils.toJsonString(ruleInfoDTO))
-                .build();
-        ruleJsonMapper.insert(ruleJsonEntity);
+        // 插入规则json到数据库
+        ruleJsonMapper.insert(RuleJsonEntity.builder()
+                .ruleCode(ruleCode)
+                .ruleJson(JsonUtils.toJsonString(buildRuleInfoDTO(ruleCode)))
+                .build());
+        // TODO: 动态生成doris查询sql，并发布查询结果到redis
+
     }
 
     private RuleInfoDTO buildRuleInfoDTO(String ruleCode) {
