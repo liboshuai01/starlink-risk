@@ -1,7 +1,9 @@
 package com.liboshuai.starlink.slr.engine.utils.data;
 
+import com.liboshuai.starlinkRisk.common.pojo.SinkPO;
+import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
+import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
-import com.liboshuai.starlink.slr.engine.pojo.EventBean;
 import com.liboshuai.starlink.slr.engine.serialize.KafkaSourceDeserializationSchema;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
@@ -32,7 +34,7 @@ public class KafkaUtil {
      * @param env: Flink上下文环境
      * @return void
      */
-    public static DataStream<EventBean> read(
+    public static DataStream<SourcePO> read(
             StreamExecutionEnvironment env,
             ParameterTool parameterTool) {
 
@@ -40,7 +42,7 @@ public class KafkaUtil {
         String topic = parameterTool.get(ParameterConstants.KAFKA_SOURCE_TOPIC);
         String group = parameterTool.get(ParameterConstants.KAFKA_SOURCE_GROUP);
 
-        KafkaSource<EventBean> KAFKA_SOURCE = KafkaSource.<EventBean>builder()
+        KafkaSource<SourcePO> KAFKA_SOURCE = KafkaSource.<SourcePO>builder()
                 .setBootstrapServers(brokers)
                 .setTopics(topic)
                 .setGroupId(group)
@@ -55,7 +57,7 @@ public class KafkaUtil {
         ).uid("kafka-source");
     }
 
-    public static void writer(DataStream<String> dataStream, ParameterTool parameterTool) {
+    public static void writer(DataStream<SinkPO> dataStream, ParameterTool parameterTool) {
         String brokers = parameterTool.get(ParameterConstants.KAFKA_SINK_BROKERS);
         String topic = parameterTool.get(ParameterConstants.KAFKA_SINK_TOPIC);
         Properties properties = new Properties();
@@ -73,7 +75,7 @@ public class KafkaUtil {
                 //设置交付保证-至少一次
                 .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
-        dataStream.sinkTo(kafkaSink).uid("kafka-skin");
+        dataStream.map(JsonUtil::obj2JsonStr).sinkTo(kafkaSink).uid("kafka-skin");
     }
 
 }

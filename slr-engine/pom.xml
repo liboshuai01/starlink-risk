@@ -299,6 +299,13 @@
                 <version>${kafka-clients.version}</version>
             </dependency>
 
+            <!-- Jedis -->
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
+            </dependency>
+
 
             <!-- =================== json =================== -->
             <!--FastJson2-->
@@ -513,7 +520,11 @@
             <version>4.0.21</version>
             <type>pom</type>
         </dependency>
-
+        <!-- Jedis -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency>
 
         <!-- ============= 日志 ============= -->
         <!-- log4j2依赖 -->

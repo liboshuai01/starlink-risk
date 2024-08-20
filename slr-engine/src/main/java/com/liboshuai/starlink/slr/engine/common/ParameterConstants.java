@@ -59,6 +59,24 @@ public class ParameterConstants {
     public static final String MYSQL_TABLE_RULE = "mysql.table.rule";
     public static final String MYSQL_TABLE_BANK = "mysql.table.bank";
 
+    /* **********************
+     *
+     * Redis 配置参数名称
+     *
+     * *********************/
+
+    public static final String REDIS_CLUSTER_NODES = "redis.cluster.nodes";
+    public static final String REDIS_PASSWORD = "redis.password";
+    public static final String REDIS_CONNECTION_TIMEOUT = "redis.connectionTimeout";
+    public static final String REDIS_SO_TIMEOUT = "redis.soTimeout";
+    public static final String REDIS_MAX_ATTEMPTS = "redis.maxAttempts";
+    public static final String REDIS_POOL_MAX_WAIT = "redis.pool.maxWait";
+    public static final String REDIS_POOL_TIME_BETWEEN_EVICTION_RUNS = "redis.pool.timeBetweenEvictionRuns";
+    public static final String REDIS_POOL_NUM_TESTS_PER_EVICTION_RUN = "redis.pool.numTestsPerEvictionRun";
+    public static final String REDIS_POOL_MAX_TOTAL = "redis.pool.maxTotal";
+    public static final String REDIS_POOL_MAX_IDLE = "redis.pool.maxIdle";
+    public static final String REDIS_POOL_MIN_IDLE = "redis.pool.minIdle";
+
 
     /* **********************
      *

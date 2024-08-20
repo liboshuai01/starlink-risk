@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.engine.serialize;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
 import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
-import com.liboshuai.starlink.slr.engine.pojo.RuleMeta;
 import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -19,7 +19,7 @@ import java.util.List;
  * @Author: liboshuai
  * @Date: 2023-10-24 20:45
  **/
-public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSchema<RuleMeta> {
+public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSchema<RuleCdcPO> {
     /**
      * 获取数据库名、表名
      */
@@ -59,7 +59,7 @@ public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSch
     }
 
     @Override
-    public void deserialize(SourceRecord sourceRecord, Collector<RuleMeta> collector) {
+    public void deserialize(SourceRecord sourceRecord, Collector<RuleCdcPO> collector) {
         //1.创建 JSON 对象用于存储最终数据
         JSONObject result = new JSONObject();
         //2.获取库名、表名放入 source
@@ -75,14 +75,14 @@ public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSch
         result.put("before", beforeJson);
         result.put("after", afterJson);
         result.put("op", type);
-        RuleMeta ruleMeta = JsonUtil.jsonStr2ObjSnakeCase(result.toJSONString(), RuleMeta.class);
+        RuleCdcPO ruleCdcPO = JsonUtil.jsonStr2ObjSnakeCase(result.toJSONString(), RuleCdcPO.class);
         //7.输出数据
-        collector.collect(ruleMeta);
+        collector.collect(ruleCdcPO);
     }
 
     @Override
-    public TypeInformation<RuleMeta> getProducedType() {
+    public TypeInformation<RuleCdcPO> getProducedType() {
         // 表示返回String类型
-        return TypeInformation.of(RuleMeta.class);
+        return TypeInformation.of(RuleCdcPO.class);
     }
 }

@@ -1,6 +1,6 @@
 package com.liboshuai.starlink.slr.engine.function;
 
-import com.liboshuai.starlink.slr.engine.pojo.EventBean;
+import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 
 /**
@@ -8,7 +8,7 @@ import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
  * description: 自定义水印时间戳生成器
  * date: 2023
  */
-public class EventTimestampAssigner implements SerializableTimestampAssigner<EventBean> {
+public class EventTimestampAssigner implements SerializableTimestampAssigner<SourcePO> {
 
     private static final long serialVersionUID = 3978382324707642081L;
 
@@ -17,7 +17,7 @@ public class EventTimestampAssigner implements SerializableTimestampAssigner<Eve
      * description: 提取事件流的event_time字段
      */
     @Override
-    public long extractTimestamp(EventBean eventBean, long l) {
-        return eventBean.getAction_time();
+    public long extractTimestamp(SourcePO sourcePO, long l) {
+        return sourcePO.getEventTimestamp();
     }
 }

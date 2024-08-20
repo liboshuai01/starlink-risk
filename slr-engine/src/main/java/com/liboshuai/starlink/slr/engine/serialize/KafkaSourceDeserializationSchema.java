@@ -1,12 +1,15 @@
 package com.liboshuai.starlink.slr.engine.serialize;
 
+import com.liboshuai.starlinkRisk.common.pojo.ChannelDataPO;
+import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
+import com.liboshuai.starlinkRisk.common.pojo.SourceSerializePO;
 import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
-import com.liboshuai.starlink.slr.engine.pojo.EventBean;
 import com.liboshuai.starlink.slr.engine.utils.log.ConsoleLogUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.connectors.kafka.KafkaDeserializationSchema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.beans.BeanUtils;
 
 /**
  * author: liboshuai
@@ -14,9 +17,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
  * date: 2023
  */
 @Slf4j
-public class KafkaSourceDeserializationSchema implements KafkaDeserializationSchema<EventBean> {
+public class KafkaSourceDeserializationSchema implements KafkaDeserializationSchema<SourcePO> {
 
-    private static final String ENCODE = "UTF8";
+    private static final String ENCODEING = "UTF8";
 
     /**
      * author: liboshuai
@@ -26,7 +29,7 @@ public class KafkaSourceDeserializationSchema implements KafkaDeserializationSch
      * @return boolean
      */
     @Override
-    public boolean isEndOfStream(EventBean o) {
+    public boolean isEndOfStream(SourcePO o) {
         return false;
     }
 
@@ -38,19 +41,21 @@ public class KafkaSourceDeserializationSchema implements KafkaDeserializationSch
      * @return java.lang.Object
      */
     @Override
-    public EventBean deserialize(ConsumerRecord<byte[], byte[]> consumerRecord) throws Exception {
-        EventBean eventBean = new EventBean();
+    public SourcePO deserialize(ConsumerRecord<byte[], byte[]> consumerRecord) throws Exception {
+        SourcePO sourcePO = new SourcePO();
         if (consumerRecord != null) {
-            String value = new String(consumerRecord.value(), ENCODE);
+            String value = new String(consumerRecord.value(), ENCODEING);
             try {
-                eventBean =  JsonUtil.jsonStr2Obj(value, EventBean.class);
+                SourceSerializePO sourceSerializePO = JsonUtil.jsonStr2Obj(value, SourceSerializePO.class);
+                BeanUtils.copyProperties(sourceSerializePO, sourcePO);
+                sourcePO.setChannelData(JsonUtil.jsonStr2Obj(sourceSerializePO.getChannelData(), ChannelDataPO.class));
             } catch (Exception e) {
                 ConsoleLogUtil.log4j2Error("反序列化SourcePO时发生异常的原因：", e);
                 return null;
             }
         }
-        ConsoleLogUtil.debug("源数据算子: {}", JsonUtil.obj2JsonStr(eventBean));
-        return eventBean;
+        ConsoleLogUtil.debug("源数据算子: {}", JsonUtil.obj2JsonStr(sourcePO));
+        return sourcePO;
     }
 
     /**
@@ -58,7 +63,7 @@ public class KafkaSourceDeserializationSchema implements KafkaDeserializationSch
      * description: 指定反序列之后的数据类型
      */
     @Override
-    public TypeInformation<EventBean> getProducedType() {
-        return TypeInformation.of(EventBean.class);
+    public TypeInformation<SourcePO> getProducedType() {
+        return TypeInformation.of(SourcePO.class);
     }
 }
