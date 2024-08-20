@@ -1,32 +1,34 @@
 package com.liboshuai.starlink.slr.admin.service.risk.impl;
 
 import com.liboshuai.starlink.slr.admin.api.constants.ErrorCodeConstants;
+import com.liboshuai.starlink.slr.admin.api.dto.risk.EventAttributeDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.risk.EventInfoDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.risk.RuleConditionDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.risk.RuleInfoDTO;
 import com.liboshuai.starlink.slr.admin.common.component.snowflake.SnowflakeId;
 import com.liboshuai.starlink.slr.admin.convert.risk.EventAttributeConvert;
 import com.liboshuai.starlink.slr.admin.convert.risk.EventInfoConvert;
 import com.liboshuai.starlink.slr.admin.convert.risk.RuleConditionConvert;
 import com.liboshuai.starlink.slr.admin.convert.risk.RuleInfoConvert;
-import com.liboshuai.starlink.slr.admin.dao.mysql.risk.EventAttributeMapper;
-import com.liboshuai.starlink.slr.admin.dao.mysql.risk.EventInfoMapper;
-import com.liboshuai.starlink.slr.admin.dao.mysql.risk.RuleConditionMapper;
-import com.liboshuai.starlink.slr.admin.dao.mysql.risk.RuleInfoMapper;
-import com.liboshuai.starlink.slr.admin.pojo.entity.risk.EventAttributeEntity;
-import com.liboshuai.starlink.slr.admin.pojo.entity.risk.EventInfoEntity;
-import com.liboshuai.starlink.slr.admin.pojo.entity.risk.RuleConditionEntity;
-import com.liboshuai.starlink.slr.admin.pojo.entity.risk.RuleInfoEntity;
+import com.liboshuai.starlink.slr.admin.dao.mysql.risk.*;
+import com.liboshuai.starlink.slr.admin.pojo.entity.risk.*;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.EventAttributeVO;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.EventInfoVO;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleConditionVO;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleInfoVO;
 import com.liboshuai.starlink.slr.admin.service.risk.RiskService;
 import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
+import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,6 +37,8 @@ public class RiskServiceImpl implements RiskService {
 
     @Resource
     private SnowflakeId snowflakeId;
+    @Resource
+    private RuleJsonMapper ruleJsonMapper;
     @Resource
     private RuleInfoMapper ruleInfoMapper;
     @Resource
@@ -79,28 +83,104 @@ public class RiskServiceImpl implements RiskService {
     public String addEventAttribute(EventAttributeVO eventAttributeVO) {
         String attributeCode = snowflakeId.nextIdStr();
         EventAttributeEntity eventAttributeEntity = EventAttributeConvert.INSTANCE.vo2Entity(eventAttributeVO);
-        eventAttributeEntity.setEventCode(attributeCode);
+        eventAttributeEntity.setAttributeCode(attributeCode);
         eventAttributeMapper.insert(eventAttributeEntity);
         return attributeCode;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void putRule(String ruleCode) {
-        // TODO: 查询逻辑待续
+        // 构建ruleInfoDTO对象
+        RuleInfoDTO ruleInfoDTO = buildRuleInfoDTO(ruleCode);
+        // 插入到数据库
+        RuleJsonEntity ruleJsonEntity = RuleJsonEntity.builder()
+                .ruleCode(ruleInfoDTO.getRuleCode())
+                .ruleJson(JsonUtils.toJsonString(ruleInfoDTO))
+                .build();
+        ruleJsonMapper.insert(ruleJsonEntity);
+    }
+
+    private RuleInfoDTO buildRuleInfoDTO(String ruleCode) {
+        // 数据库查询数据
         RuleInfoEntity ruleInfoEntity = ruleInfoMapper.selectOneByRuleCode(ruleCode);
+        if (Objects.isNull(ruleInfoEntity)) {
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.RULE_INFO_NOT_EXISTS, ruleCode);
+        }
         List<RuleConditionEntity> ruleConditionEntityList = ruleConditionMapper.selectListByRuleCode(ruleCode);
         if (CollectionUtils.isEmpty(ruleConditionEntityList)) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.RULE_CONDITION_NOT_EXISTS);
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.RULE_CONDITION_NOT_EXISTS, ruleCode);
         }
         List<String> eventCodeList = ruleConditionEntityList.stream()
                 .map(RuleConditionEntity::getEventCode)
                 .collect(Collectors.toList());
         List<EventInfoEntity> eventInfoEntityList = eventInfoMapper.selectListByEventCode(eventCodeList);
         if (CollectionUtils.isEmpty(eventInfoEntityList)) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.EVENT_INFO_NOT_EXISTS);
+            throw ServiceExceptionUtil.exception(ErrorCodeConstants.EVENT_INFO_NOT_EXISTS, eventCodeList);
         }
+        List<EventAttributeEntity> eventAttributeEntityList = eventAttributeMapper.selectListByEventCode(eventCodeList);
 
-        // TODO：组合规则参数为json
+        // entity转dto
+        RuleInfoDTO ruleInfoDTO = RuleInfoConvert.INSTANCE.entity2Dto(ruleInfoEntity);
+        List<RuleConditionDTO> ruleConditionDTOList = RuleConditionConvert.INSTANCE.batchEntity2Dto(ruleConditionEntityList);
+        List<EventInfoDTO> eventInfoDTOList = EventInfoConvert.INSTANCE.batchEntity2Dto(eventInfoEntityList);
+        List<EventAttributeDTO> eventAttributeDTOList = EventAttributeConvert.INSTANCE.batchEntity2Dto(eventAttributeEntityList);
 
+        // 设置EventInfoDTO对象的eventAttributeDTOList属性
+        Map<String, List<EventAttributeDTO>> attributeByEventCodeMap;
+        if (!CollectionUtils.isEmpty(eventAttributeDTOList)) {
+            attributeByEventCodeMap = eventAttributeDTOList.stream()
+                    .collect(Collectors.groupingBy(EventAttributeDTO::getEventCode));
+        } else {
+            attributeByEventCodeMap = new HashMap<>();
+        }
+        eventInfoDTOList = eventInfoDTOList.stream()
+                .peek(eventInfoDTO -> eventInfoDTO.setEventAttributeDTOList(
+                        attributeByEventCodeMap.get(eventInfoDTO.getEventCode()))
+                )
+                .collect(Collectors.toList());
+
+        // 设置RuleConditionDTO对象的eventInfoDTO属性
+        Map<String, List<EventInfoDTO>> eventInfoByEventCodeMap = eventInfoDTOList.stream()
+                .collect(Collectors.groupingBy(EventInfoDTO::getEventCode));
+        ruleConditionDTOList = ruleConditionDTOList.stream()
+                .peek(ruleConditionDTO -> ruleConditionDTO.setEventInfoDTO(
+                        eventInfoByEventCodeMap.get(ruleConditionDTO.getEventCode()).get(0)
+                ))
+                .collect(Collectors.toList());
+
+        // 设置RuleInfoDTO对象的ruleConditionDTOList属性
+        ruleInfoDTO.setRuleConditionDTOList(ruleConditionDTOList);
+        return ruleInfoDTO;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

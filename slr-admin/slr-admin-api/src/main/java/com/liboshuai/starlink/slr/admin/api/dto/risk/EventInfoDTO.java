@@ -1,9 +1,13 @@
-package com.liboshuai.starlink.slr.admin.pojo.entity.risk;
+package com.liboshuai.starlink.slr.admin.api.dto.risk;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseDO;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.util.List;
 
 
 @Data
@@ -11,9 +15,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = true)
-@TableName("slr_event_info")
-public class EventInfoEntity extends BaseDO {
+public class EventInfoDTO implements Serializable {
 
     private static final long serialVersionUID = 1606329461650813780L;
 
@@ -24,4 +26,6 @@ public class EventInfoEntity extends BaseDO {
     private String eventName; // 事件名称
 
     private String eventDesc; // 事件描述
+
+    private List<EventAttributeDTO> eventAttributeDTOList; // 事件属性
 }

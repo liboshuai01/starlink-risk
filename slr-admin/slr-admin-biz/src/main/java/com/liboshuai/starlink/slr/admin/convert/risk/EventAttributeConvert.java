@@ -1,5 +1,6 @@
 package com.liboshuai.starlink.slr.admin.convert.risk;
 
+import com.liboshuai.starlink.slr.admin.api.dto.risk.EventAttributeDTO;
 import com.liboshuai.starlink.slr.admin.pojo.entity.risk.EventAttributeEntity;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.EventAttributeVO;
 import org.mapstruct.Mapper;
@@ -19,4 +20,8 @@ public interface EventAttributeConvert {
     List<EventAttributeEntity> batchVo2Entity(List<EventAttributeVO> eventAttributeVOList);
 
     List<EventAttributeVO> batchEntity2Vo(List<EventAttributeEntity> eventAttributeEntityList);
+
+    EventAttributeDTO entity2Dto(EventAttributeEntity eventAttributeEntity);
+
+    List<EventAttributeDTO> batchEntity2Dto(List<EventAttributeEntity> eventAttributeEntityList);
 }

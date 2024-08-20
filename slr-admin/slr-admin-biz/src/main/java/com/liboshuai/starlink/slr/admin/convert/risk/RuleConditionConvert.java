@@ -1,5 +1,8 @@
 package com.liboshuai.starlink.slr.admin.convert.risk;
 
+import com.liboshuai.starlink.slr.admin.api.dto.risk.EventInfoDTO;
+import com.liboshuai.starlink.slr.admin.api.dto.risk.RuleConditionDTO;
+import com.liboshuai.starlink.slr.admin.pojo.entity.risk.EventInfoEntity;
 import com.liboshuai.starlink.slr.admin.pojo.entity.risk.RuleConditionEntity;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleConditionVO;
 import org.mapstruct.Mapper;
@@ -19,4 +22,8 @@ public interface RuleConditionConvert {
     List<RuleConditionEntity> batchVo2Entity(List<RuleConditionVO> ruleConditionVOList);
 
     List<RuleConditionVO> batchEntity2Vo(List<RuleConditionEntity> ruleConditionEntityList);
+
+    RuleConditionDTO entity2Dto(RuleConditionEntity ruleConditionEntity);
+
+    List<RuleConditionDTO> batchEntity2Dto(List<RuleConditionEntity> ruleConditionEntityList);
 }

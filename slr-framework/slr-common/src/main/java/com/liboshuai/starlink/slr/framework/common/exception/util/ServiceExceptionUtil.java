@@ -22,7 +22,7 @@ public class ServiceExceptionUtil {
         return exception0(errorCode.getCode(), errorCode.getMsg());
     }
 
-    public static ServiceException exception(ErrorCode errorCode, Object data) {
+    public static ServiceException exception( Object data, ErrorCode errorCode) {
         return exception0(errorCode.getCode(), errorCode.getMsg(), data);
     }
 

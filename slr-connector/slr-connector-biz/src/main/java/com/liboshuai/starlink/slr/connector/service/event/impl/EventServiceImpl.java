@@ -144,7 +144,7 @@ public class EventServiceImpl implements EventService {
             String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getChannel);
             String message = String.format("字段 [%s]: 无效的渠道 [%s]", fieldName, channel);
             EventErrorDTO eventErrorDTO = EventErrorDTO.builder().reasons(Collections.singletonList(message)).build();
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, eventErrorDTO);
+            throw ServiceExceptionUtil.exception(eventErrorDTO, ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR);
         }
 
         List<EventDetailDTO> eventDetailDTOList = eventUploadDTO.getEventDetailDTOList();
@@ -154,7 +154,7 @@ public class EventServiceImpl implements EventService {
             String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getEventDetailDTOList);
             String message = String.format("字段 [%s]: 事件数据集合不能为空", fieldName);
             EventErrorDTO eventErrorDTO = EventErrorDTO.builder().reasons(Collections.singletonList(message)).build();
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, eventErrorDTO);
+            throw ServiceExceptionUtil.exception(eventErrorDTO, ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR);
         }
 
         // 判断单次上送数据集合元素个数超量
@@ -163,7 +163,7 @@ public class EventServiceImpl implements EventService {
             String fieldName = ReflectUtils.getFieldName(EventUploadDTO::getEventDetailDTOList);
             String message = String.format("字段 [%s]: 元素个数必须小于等于 [%d]", fieldName, maxSize);
             EventErrorDTO eventErrorDTO = EventErrorDTO.builder().reasons(Collections.singletonList(message)).build();
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR, eventErrorDTO);
+            throw ServiceExceptionUtil.exception(eventErrorDTO, ErrorCodeConstants.UPLOAD_EVENT_MAJOR_ERROR);
         }
     }
 
@@ -206,7 +206,7 @@ public class EventServiceImpl implements EventService {
         }
 
         if (!eventErrorDTOList.isEmpty()) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.UPLOAD_EVENT_MINOR_ERROR, eventErrorDTOList);
+            throw ServiceExceptionUtil.exception(eventErrorDTOList, ErrorCodeConstants.UPLOAD_EVENT_MINOR_ERROR);
         }
     }
 

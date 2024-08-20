@@ -66,7 +66,6 @@ CREATE TABLE `slr_rule_info`
     `rule_desc`          varchar(255)    NOT NULL DEFAULT '' COMMENT '规则描述',
     `status`             tinyint         NOT NULL DEFAULT '0' COMMENT '状态：0-停用，1-启用',
     `condition_operator` text            NOT NULL COMMENT '规则条件组合操作符',
-    `rule_json`          longtext        NOT NULL COMMENT '规则json',
     `creator`            varchar(255)    NOT NULL DEFAULT '' COMMENT '创建用户',
     `updater`            varchar(255)    NOT NULL DEFAULT '' COMMENT '更新用户',
     `create_time`        datetime        NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '创建时间',
@@ -76,3 +75,18 @@ CREATE TABLE `slr_rule_info`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_bin COMMENT ='星链风控规则基本信息';
+
+CREATE TABLE `slr_rule_json`
+(
+    `id`          bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `rule_code`   varchar(64)     NOT NULL DEFAULT '' COMMENT '规则编号',
+    `rule_json`   longtext        NOT NULL COMMENT '规则json',
+    `creator`     varchar(255)    NOT NULL DEFAULT '' COMMENT '创建用户',
+    `updater`     varchar(255)    NOT NULL DEFAULT '' COMMENT '更新用户',
+    `create_time` datetime        NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '创建时间',
+    `update_time` datetime        NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '创建时间',
+    `deleted`     bit(1)          NOT NULL DEFAULT b'0' COMMENT '是否删除：0-否，1-是',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin COMMENT ='星链风控规则json数据';
