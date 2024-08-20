@@ -1,9 +1,9 @@
 package com.liboshuai.starlink.slr.engine.function;
 
+import com.liboshuai.starlink.slr.engine.utils.log.ConsoleLogUtil;
 import com.liboshuai.starlinkRisk.common.constants.RuleChannelConstants;
 import com.liboshuai.starlinkRisk.common.pojo.ChannelDataPO;
 import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
-import com.liboshuai.starlink.slr.engine.utils.log.ConsoleLogUtil;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.util.StringUtils;
 

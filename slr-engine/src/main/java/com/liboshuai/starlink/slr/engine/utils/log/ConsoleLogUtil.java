@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.engine.utils.log;
 
+import com.liboshuai.starlink.slr.engine.common.ConsoleLogLevelEnum;
 import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
 import com.liboshuai.starlinkRisk.common.utils.string.StringUtil;
-import com.liboshuai.starlink.slr.engine.common.ConsoleLogLevelEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

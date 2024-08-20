@@ -1,10 +1,10 @@
 package com.liboshuai.starlink.slr.engine.serialize;
 
+import com.liboshuai.starlink.slr.engine.utils.log.ConsoleLogUtil;
 import com.liboshuai.starlinkRisk.common.pojo.ChannelDataPO;
 import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
 import com.liboshuai.starlinkRisk.common.pojo.SourceSerializePO;
 import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
-import com.liboshuai.starlink.slr.engine.utils.log.ConsoleLogUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.connectors.kafka.KafkaDeserializationSchema;

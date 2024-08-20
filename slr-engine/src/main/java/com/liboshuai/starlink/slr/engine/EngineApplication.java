@@ -1,16 +1,15 @@
 package com.liboshuai.starlink.slr.engine;
 
 
-import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
-import com.liboshuai.starlinkRisk.common.pojo.SinkPO;
-import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.common.StateDescContainer;
 import com.liboshuai.starlink.slr.engine.function.*;
 import com.liboshuai.starlink.slr.engine.utils.data.KafkaUtil;
 import com.liboshuai.starlink.slr.engine.utils.data.MysqlUtil;
-import com.liboshuai.starlink.slr.engine.utils.log.ConsoleLogUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
+import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
+import com.liboshuai.starlinkRisk.common.pojo.SinkPO;
+import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;

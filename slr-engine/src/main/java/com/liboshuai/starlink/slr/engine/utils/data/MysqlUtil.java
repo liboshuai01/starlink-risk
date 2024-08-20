@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.engine.utils.data;
 
-import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.serialize.MysqlCdcDeserializationSchema;
+import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
