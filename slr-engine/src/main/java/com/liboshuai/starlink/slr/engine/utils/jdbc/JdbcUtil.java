@@ -1,9 +1,9 @@
 package com.liboshuai.starlink.slr.engine.utils.jdbc;
 
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
+import com.liboshuai.starlink.slr.engine.utils.CoreStringUtil;
+import com.liboshuai.starlink.slr.engine.utils.CryptoUtils;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
-import com.liboshuai.starlinkRisk.common.utils.crypto.CryptoUtils;
-import com.liboshuai.starlinkRisk.common.utils.string.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.java.utils.ParameterTool;
 
@@ -36,7 +36,7 @@ public class JdbcUtil {
             String database = parameterTool.get(ParameterConstants.MYSQL_DATABASE);
             username = parameterTool.get(ParameterConstants.MYSQL_USERNAME);
             password = CryptoUtils.decrypt(parameterTool.get(ParameterConstants.MYSQL_PASSWORD));
-            url = StringUtil.format("jdbc:mysql://{}:{}/{}?serverTimezone=UTC&characterEncoding=utf8&useUnicode=true&useSSL=false",
+            url = CoreStringUtil.format("jdbc:mysql://{}:{}/{}?serverTimezone=UTC&characterEncoding=utf8&useUnicode=true&useSSL=false",
                     hostname, port, database);
         } catch (Exception e) {
             log.error("MySQL JDBC 初始化数据连接配置失败", e);

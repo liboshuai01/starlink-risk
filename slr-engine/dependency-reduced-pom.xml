@@ -240,7 +240,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.30</version>
+      <version>1.18.24</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -296,21 +296,6 @@
         <artifactId>spring-boot-starter-test</artifactId>
         <version>${spring-boot.version}</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.liboshuai.starlinkRisk</groupId>
-        <artifactId>starlinkRisk-common</artifactId>
-        <version>${starlinkRisk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.liboshuai.starlinkRisk</groupId>
-        <artifactId>starlinkRisk-engine</artifactId>
-        <version>${starlinkRisk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.liboshuai.starlinkRisk</groupId>
-        <artifactId>starlinkRisk-loadTester</artifactId>
-        <version>${starlinkRisk.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.xiaoymin</groupId>
@@ -501,7 +486,7 @@
     <flink-connector-mysql-cdc.version>2.4.0</flink-connector-mysql-cdc.version>
     <clickhouse-jdbc.version>0.3.2-patch11</clickhouse-jdbc.version>
     <javafaker.version>1.0.2</javafaker.version>
-    <lombok.version>1.18.30</lombok.version>
+    <lombok.version>1.18.24</lombok.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <commons-math3.version>3.6.1</commons-math3.version>
     <maven-surefire-plugin>3.0.0</maven-surefire-plugin>

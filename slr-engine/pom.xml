@@ -69,7 +69,7 @@
         <hutool.version>5.8.25</hutool.version>
         <commons-text.version>1.10.0</commons-text.version>
         <aviator.version>5.3.3</aviator.version>
-        <lombok.version>1.18.30</lombok.version>
+        <lombok.version>1.18.24</lombok.version>
         <javafaker.version>1.0.2</javafaker.version>
         <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
         <spring-boot-maven-plugin.version>2.7.10</spring-boot-maven-plugin.version>
@@ -144,23 +144,6 @@
                 <artifactId>spring-boot-starter-test</artifactId>
                 <version>${spring-boot.version}</version>
                 <scope>test</scope>
-            </dependency>
-
-            <!-- 子项目 -->
-            <dependency>
-                <groupId>com.liboshuai.starlinkRisk</groupId>
-                <artifactId>starlinkRisk-common</artifactId>
-                <version>${starlinkRisk.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.liboshuai.starlinkRisk</groupId>
-                <artifactId>starlinkRisk-engine</artifactId>
-                <version>${starlinkRisk.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.liboshuai.starlinkRisk</groupId>
-                <artifactId>starlinkRisk-loadTester</artifactId>
-                <version>${starlinkRisk.version}</version>
             </dependency>
 
             <!--knife4j-->
@@ -386,11 +369,6 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- common -->
-        <dependency>
-            <groupId>com.liboshuai.starlinkRisk</groupId>
-            <artifactId>starlinkRisk-common</artifactId>
-        </dependency>
 
         <!-- Springboot核心启动，包括了自动配置,日志,yaml -->
         <dependency>
@@ -563,6 +541,16 @@
             <groupId>com.liboshuai.starlink</groupId>
             <artifactId>slr-admin-api</artifactId>
             <version>1.0</version>
+        </dependency>
+
+        <!--FastJson2-->
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2-extension</artifactId>
         </dependency>
     </dependencies>
 

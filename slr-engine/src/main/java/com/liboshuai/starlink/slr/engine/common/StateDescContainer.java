@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.engine.common;
 
-import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
-import com.liboshuai.starlinkRisk.common.pojo.RulePO;
+import com.liboshuai.starlink.slr.admin.api.dto.risk.RuleJsonDTO;
+import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -19,8 +19,8 @@ public class StateDescContainer {
     /**
      * 规则广播流状态定义
      */
-    public static MapStateDescriptor<String, RuleCdcPO> broadcastRuleStateDesc =
-            new MapStateDescriptor<>("broadcastRule", String.class, RuleCdcPO.class);
+    public static MapStateDescriptor<String, RuleCdcDTO> broadcastRuleStateDesc =
+            new MapStateDescriptor<>("broadcastRule", String.class, RuleCdcDTO.class);
 
     /**
      * 游戏抽奖最后预警状态定义
@@ -37,5 +37,5 @@ public class StateDescContainer {
     /**
      * 风控规则状态定义
      */
-    public static MapStateDescriptor<String, RulePO> riskRuleStateDesc = new MapStateDescriptor<>("riskRule", String.class, RulePO.class);
+    public static MapStateDescriptor<String, RuleJsonDTO> riskRuleStateDesc = new MapStateDescriptor<>("riskRule", String.class, RuleJsonDTO.class);
 }

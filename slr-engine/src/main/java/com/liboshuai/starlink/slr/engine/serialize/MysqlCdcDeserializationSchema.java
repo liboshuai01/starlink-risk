@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.engine.serialize;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
-import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
+import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
+import com.liboshuai.starlink.slr.engine.utils.FastJsonUtil;
 import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -14,7 +14,7 @@ import org.apache.kafka.connect.source.SourceRecord;
 
 import java.util.List;
 
-public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSchema<RuleCdcPO> {
+public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSchema<RuleCdcDTO> {
 
     private static final long serialVersionUID = -4554108517291370408L;
 
@@ -57,7 +57,7 @@ public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSch
     }
 
     @Override
-    public void deserialize(SourceRecord sourceRecord, Collector<RuleCdcPO> collector) {
+    public void deserialize(SourceRecord sourceRecord, Collector<RuleCdcDTO> collector) {
         //1.创建 JSON 对象用于存储最终数据
         JSONObject result = new JSONObject();
         //2.获取库名、表名放入 source
@@ -73,14 +73,14 @@ public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSch
         result.put("before", beforeJson);
         result.put("after", afterJson);
         result.put("op", type);
-        RuleCdcPO ruleCdcPO = JsonUtil.jsonStr2ObjSnakeCase(result.toJSONString(), RuleCdcPO.class);
+        RuleCdcDTO RuleCdcDTO = FastJsonUtil.jsonStr2ObjSnakeCase(result.toJSONString(), RuleCdcDTO.class);
         //7.输出数据
-        collector.collect(ruleCdcPO);
+        collector.collect(RuleCdcDTO);
     }
 
     @Override
-    public TypeInformation<RuleCdcPO> getProducedType() {
+    public TypeInformation<RuleCdcDTO> getProducedType() {
         // 表示返回String类型
-        return TypeInformation.of(RuleCdcPO.class);
+        return TypeInformation.of(RuleCdcDTO.class);
     }
 }

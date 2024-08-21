@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.engine.utils.log;
 
 import com.liboshuai.starlink.slr.engine.common.ConsoleLogLevelEnum;
-import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
-import com.liboshuai.starlinkRisk.common.utils.string.StringUtil;
+import com.liboshuai.starlink.slr.engine.utils.CoreStringUtil;
+import com.liboshuai.starlink.slr.engine.utils.FastJsonUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class ConsoleLogUtil {
         System.out.printf("%-26s", "[" + simpleDateFormat.format(new Date()) + "]");
         System.out.printf("%-8s", "DEBUG");
         System.out.printf("%-1s", "[" + classMsg + "]");
-        System.out.print(" : " + StringUtil.format(pattern, arguments) + "\n");
+        System.out.print(" : " + CoreStringUtil.format(pattern, arguments) + "\n");
     }
 
     public static void info(String pattern, Object... arguments) {
@@ -58,7 +58,7 @@ public class ConsoleLogUtil {
         System.out.printf("%-26s", "[" + simpleDateFormat.format(new Date()) + "]");
         System.out.printf("%-8s", "INFO");
         System.out.printf("%-1s", "[" + classMsg + "]");
-        System.out.print(" : " + StringUtil.format(pattern, arguments) + "\n");
+        System.out.print(" : " + CoreStringUtil.format(pattern, arguments) + "\n");
     }
 
     public static void warning(String pattern, Object... arguments) {
@@ -71,7 +71,7 @@ public class ConsoleLogUtil {
         System.out.printf("%-26s", "[" + simpleDateFormat.format(new Date()) + "]");
         System.out.printf("%-8s", "WARNING");
         System.out.printf("%-1s", "[" + classMsg + "]");
-        System.out.print(" : " + StringUtil.format(pattern, arguments) + "\n");
+        System.out.print(" : " + CoreStringUtil.format(pattern, arguments) + "\n");
     }
 
     public static void error(String pattern, Object... arguments) {
@@ -79,7 +79,7 @@ public class ConsoleLogUtil {
             return;
         }
         splicingErrorLogs();
-        System.out.print(" : " + StringUtil.format(pattern, arguments) + "\n");
+        System.out.print(" : " + CoreStringUtil.format(pattern, arguments) + "\n");
     }
 
     private static void splicingErrorLogs() {
@@ -101,7 +101,7 @@ public class ConsoleLogUtil {
             return;
         }
         splicingErrorLogs();
-        System.out.print(" : " + StringUtil.format(pattern + ": \n{}", JsonUtil.obj2JsonStr(e)) + "\n");
+        System.out.print(" : " + CoreStringUtil.format(pattern + ": \n{}", FastJsonUtil.obj2JsonStr(e)) + "\n");
         log.error(pattern + ": ", e);
     }
 }
