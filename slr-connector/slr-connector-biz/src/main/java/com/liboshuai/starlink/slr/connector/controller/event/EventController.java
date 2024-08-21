@@ -1,5 +1,6 @@
 package com.liboshuai.starlink.slr.connector.controller.event;
 
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;
@@ -35,8 +36,8 @@ public class EventController {
     @RateLimiter(count = 10000)
     @PostMapping("/upload-kafka")
     @Operation(summary = "上送事件数据到kafka")
-    public CommonResult<?> uploadKafka(@RequestBody EventUploadDTO eventUploadDTO) {
-        eventService.uploadKafka(eventUploadDTO);
+    public CommonResult<?> uploadKafka(@RequestBody EventKafkaDTO eventKafkaDTO) {
+        eventService.uploadKafka(eventKafkaDTO);
         return success();
     }
 }

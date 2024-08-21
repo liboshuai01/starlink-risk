@@ -1,5 +1,6 @@
 package com.liboshuai.starlink.slr.connector.service.event;
 
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 
 public interface EventService {
@@ -12,5 +13,5 @@ public interface EventService {
     /**
      * 上送事件数据到kafka
      */
-    void uploadKafka(EventUploadDTO eventUploadDTO);
+    void uploadKafka(EventKafkaDTO eventKafkaDTO);
 }
