@@ -1,10 +1,8 @@
 package com.liboshuai.starlink.slr.connector.service.event.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventErrorDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.admin.api.enums.event.ChannelEnum;
 import com.liboshuai.starlink.slr.connector.api.constants.ErrorCodeConstants;
 import com.liboshuai.starlink.slr.connector.convert.event.EventConvert;
@@ -183,9 +181,10 @@ public class EventServiceImpl implements EventService {
             List<String> reasons = new ArrayList<>();
 
             // 效验各字段值是否非空
-            checkNotEmpty(eventDetailDTO, EventDetailDTO::getUserId, reasons);
+            checkNotEmpty(eventDetailDTO, EventDetailDTO::getUserCode, reasons);
             checkNotEmpty(eventDetailDTO, EventDetailDTO::getUsername, reasons);
-            checkNotEmpty(eventDetailDTO, EventDetailDTO::getEventId, reasons);
+            checkNotEmpty(eventDetailDTO, EventDetailDTO::getEventCode, reasons);
+            checkNotEmpty(eventDetailDTO, EventDetailDTO::getEventValue, reasons);
             checkNotEmpty(eventDetailDTO, EventDetailDTO::getEventTimestamp, reasons);
 
             // 校验eventTimestamp字段值是否合法
@@ -193,7 +192,7 @@ public class EventServiceImpl implements EventService {
 
             if (!reasons.isEmpty()) {
                 EventErrorDTO eventErrorDTO = EventErrorDTO.builder()
-                        .eventDetailDTO(eventDetailDTO)
+                        .eventKafkaDTO(eventDetailDTO)
                         .index(index)
                         .reasons(reasons)
                         .build();

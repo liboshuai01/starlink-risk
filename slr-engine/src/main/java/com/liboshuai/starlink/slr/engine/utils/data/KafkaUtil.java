@@ -1,10 +1,6 @@
 package com.liboshuai.starlink.slr.engine.utils.data;
 
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
-import com.liboshuai.starlink.slr.engine.serialize.KafkaSourceDeserializationSchema;
-import com.liboshuai.starlinkRisk.common.pojo.SinkPO;
-import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
-import com.liboshuai.starlinkRisk.common.utils.json.JsonUtil;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -13,7 +9,6 @@ import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
-import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -34,7 +29,7 @@ public class KafkaUtil {
      * @param env: Flink上下文环境
      * @return void
      */
-    public static DataStream<SourcePO> read(
+    public static DataStream<String> read(
             StreamExecutionEnvironment env,
             ParameterTool parameterTool) {
 
@@ -42,12 +37,12 @@ public class KafkaUtil {
         String topic = parameterTool.get(ParameterConstants.KAFKA_SOURCE_TOPIC);
         String group = parameterTool.get(ParameterConstants.KAFKA_SOURCE_GROUP);
 
-        KafkaSource<SourcePO> KAFKA_SOURCE = KafkaSource.<SourcePO>builder()
+        KafkaSource<String> KAFKA_SOURCE = KafkaSource.<String>builder()
                 .setBootstrapServers(brokers)
                 .setTopics(topic)
                 .setGroupId(group)
                 .setStartingOffsets(OffsetsInitializer.latest())
-                .setDeserializer(KafkaRecordDeserializationSchema.of(new KafkaSourceDeserializationSchema()))
+                .setValueOnlyDeserializer(new SimpleStringSchema())
                 .build();
 
         return env.fromSource(
@@ -57,7 +52,7 @@ public class KafkaUtil {
         ).uid("kafka-source");
     }
 
-    public static void writer(DataStream<SinkPO> dataStream, ParameterTool parameterTool) {
+    public static void writer(DataStream<String> dataStream, ParameterTool parameterTool) {
         String brokers = parameterTool.get(ParameterConstants.KAFKA_SINK_BROKERS);
         String topic = parameterTool.get(ParameterConstants.KAFKA_SINK_TOPIC);
         Properties properties = new Properties();
@@ -75,7 +70,7 @@ public class KafkaUtil {
                 //设置交付保证-至少一次
                 .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
-        dataStream.map(JsonUtil::obj2JsonStr).sinkTo(kafkaSink).uid("kafka-skin");
+        dataStream.sinkTo(kafkaSink).uid("kafka-skin");
     }
 
 }

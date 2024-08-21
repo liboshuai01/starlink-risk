@@ -31,8 +31,8 @@ public class RuleConditionVO implements Serializable {
     @Schema(description = "事件编号")
     private String eventCode; // 事件编号
 
-    @Schema(description = "次数")
-    private String count; // 次数
+    @Schema(description = "事件值")
+    private String eventValue; // 事件值
 
     @Schema(description = "开始时间")
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)

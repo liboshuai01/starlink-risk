@@ -1,15 +1,15 @@
 package com.liboshuai.starlink.slr.engine;
 
 
+import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.common.StateDescContainer;
-import com.liboshuai.starlink.slr.engine.function.*;
+import com.liboshuai.starlink.slr.engine.function.CoreFunction;
 import com.liboshuai.starlink.slr.engine.utils.data.KafkaUtil;
 import com.liboshuai.starlink.slr.engine.utils.data.MysqlUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
+import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
 import com.liboshuai.starlinkRisk.common.pojo.RuleCdcPO;
-import com.liboshuai.starlinkRisk.common.pojo.SinkPO;
-import com.liboshuai.starlinkRisk.common.pojo.SourcePO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -18,8 +18,6 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -43,35 +41,34 @@ public class EngineApplication {
         // 获取规则广播流
         BroadcastStream<RuleCdcPO> broadcastStream = ruleSource.broadcast(StateDescContainer.broadcastRuleStateDesc);
         // 获取业务数据流
-        KeyedStream<SourcePO, String> sourcePOStringKeyedStream = KafkaUtil
-                //读取Kafka
-                .read(env, parameterTool)
-                .filter(new KafkaSourceFilterFunction()).uid("filter-data")
-                //注册水印
-                .assignTimestampsAndWatermarks(
-                        WatermarkStrategy
-                                //水印生成器: 实现一个延迟10秒的固定延迟水印
-                                .<SourcePO>forBoundedOutOfOrderness(Duration.ofMillis(
-                                        TimeUnit.SECONDS.toMillis(parameterTool.getInt(
-                                                ParameterConstants.FLINK_MAXOUTOFORDERNESS
-                                        ))
-                                ))
-                                //时间戳生成器：提取事件流的event_time字段
-                                .withTimestampAssigner(new EventTimestampAssigner())
-                                // 空闲检查时间，防止水位线停止推进
-                                .withIdleness(Duration.ofSeconds(5))
-                ).uid("register-watermark")
-                // 用户id分组
-                .keyBy(new SourcePOKeyBy());
-        SingleOutputStreamOperator<SinkPO> warnMessageDs = sourcePOStringKeyedStream.window(TumblingEventTimeWindows.of(Time.minutes(1)))
-                .aggregate(new LotteryNumberAggFunction(), new LotteryNumberWindowFunction()).uid("time-slicing")
-                .keyBy(new WindowPoUserIdKeyBy())
-                // 连接业务数据流和规则配置流
-                .connect(broadcastStream)
-                // 时间切片聚合
-                .process(new SliceAggregationFunction()).uid("time-slice-aggregation");
+        KeyedStream<EventKafkaDTO, String> eventKafkaDTOStringKeyedStream = KafkaUtil.read(env, parameterTool) // 读取数据
+                .map(s -> JsonUtils.parseObject(s, EventKafkaDTO.class)) // 转换string为eventKafkaDTO对象
+                .assignTimestampsAndWatermarks(buildWatermarkStrategy(parameterTool)) // 定义水位线
+                .uid("register-watermark")
+                .keyBy(EventKafkaDTO::getKeyCode);// keyBy分组
+
+        // 连接业务数据流和规则配置流
+        SingleOutputStreamOperator<String> warnMessageStream = eventKafkaDTOStringKeyedStream.connect(broadcastStream)
+                .process(new CoreFunction()).uid("engine-core-function");
         // 将告警信息写入kafka
-        KafkaUtil.writer(warnMessageDs, parameterTool);
+        KafkaUtil.writer(warnMessageStream, parameterTool);
         env.execute();
+    }
+
+    /**
+     * 构建水位线
+     */
+    private static WatermarkStrategy<EventKafkaDTO> buildWatermarkStrategy(ParameterTool parameterTool) {
+        return WatermarkStrategy
+                //水印生成器: 实现一个延迟10秒的固定延迟水印
+                .<EventKafkaDTO>forBoundedOutOfOrderness(Duration.ofMillis(
+                        TimeUnit.SECONDS.toMillis(parameterTool.getInt(
+                                ParameterConstants.FLINK_MAXOUTOFORDERNESS
+                        ))
+                ))
+                //时间戳生成器：提取事件流的event_time字段
+                .withTimestampAssigner((eventKafkaDTO, eventKafkaTimestamp) -> Long.parseLong(eventKafkaDTO.getTimestamp()))
+                // 空闲检查时间，防止水位线停止推进
+                .withIdleness(Duration.ofSeconds(5));
     }
 }

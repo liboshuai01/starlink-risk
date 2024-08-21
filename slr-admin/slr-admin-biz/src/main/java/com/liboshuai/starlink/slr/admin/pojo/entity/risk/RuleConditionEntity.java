@@ -24,7 +24,7 @@ public class RuleConditionEntity extends BaseDO {
 
     private String eventCode; // 事件编号
 
-    private String count; // 次数
+    private String eventValue; // 事件值
 
     private LocalDateTime beginTime; // 开始时间
 

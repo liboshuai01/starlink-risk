@@ -22,11 +22,6 @@ public class EventErrorDTO implements Serializable {
     private static final long serialVersionUID = 112687514700269556L;
 
     /**
-     * 数据索引
-     */
-    private Integer index;
-
-    /**
      * 错误原因
      */
     private List<String> reasons;
@@ -34,6 +29,6 @@ public class EventErrorDTO implements Serializable {
     /**
      * 错误数据
      */
-    private EventDetailDTO eventDetailDTO;
+    private EventKafkaDTO eventKafkaDTO;
 
 }

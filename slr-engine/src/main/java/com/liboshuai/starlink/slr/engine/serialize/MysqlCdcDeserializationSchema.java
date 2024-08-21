@@ -14,12 +14,10 @@ import org.apache.kafka.connect.source.SourceRecord;
 
 import java.util.List;
 
-
-/**
- * @Author: liboshuai
- * @Date: 2023-10-24 20:45
- **/
 public class MysqlCdcDeserializationSchema implements DebeziumDeserializationSchema<RuleCdcPO> {
+
+    private static final long serialVersionUID = -4554108517291370408L;
+
     /**
      * 获取数据库名、表名
      */

@@ -31,28 +31,33 @@ public class EventKafkaDTO implements Serializable {
     private String channel;
 
     /**
-     * 用户ID
+     * 时间戳（毫秒级别13位）
      */
-    private String userId;
+    private String timestamp;
 
     /**
-     * 用户名称
+     * key编号
      */
-    private String username;
+    private String keyCode;
 
     /**
-     * 事件ID
+     * key名称
      */
-    private String eventId;
+    private String keyValue;
 
     /**
-     * 事件时间戳（毫秒级别13位）
+     * 事件编号
      */
-    private String eventTimestamp;
+    private String eventCode;
 
     /**
-     * 事件属性
+     * 事件值
      */
-    private Map<String, Object> eventAttributes;
+    private String eventValue;
+
+    /**
+     * 属性
+     */
+    private Map<String, Object> attribute;
 
 }

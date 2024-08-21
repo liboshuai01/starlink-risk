@@ -1,6 +1,5 @@
 package com.liboshuai.starlink.slr.connector.convert.event;
 
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
 import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

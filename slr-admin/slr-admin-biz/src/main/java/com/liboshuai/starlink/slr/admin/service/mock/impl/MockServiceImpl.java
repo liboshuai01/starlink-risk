@@ -1,7 +1,5 @@
 package com.liboshuai.starlink.slr.admin.service.mock.impl;
 
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventDetailDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.admin.common.component.snowflake.SnowflakeId;
 import com.liboshuai.starlink.slr.admin.common.util.mock.MockEventUtils;
 import com.liboshuai.starlink.slr.admin.service.mock.MockService;
@@ -63,10 +61,11 @@ public class MockServiceImpl implements MockService {
                 StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             timeStampStream.forEach(timeStamp -> {
                 EventDetailDTO eventDetailDTO = EventDetailDTO.builder()
-                        .userId(snowflakeId.nextIdStr())
+                        .userCode(snowflakeId.nextIdStr())
                         .username(MockEventUtils.getUserName())
-                        .eventId(snowflakeId.nextIdStr())
-                        .eventTimestamp(timeStamp)
+                        .eventCode(snowflakeId.nextIdStr())
+                        .eventValue("1")
+                        .eventTimestamp(String.valueOf(timeStamp))
                         .build();
                 List<EventDetailDTO> eventDetailDTOS = Collections.singletonList(eventDetailDTO);
                 EventUploadDTO eventUploadDTO = EventUploadDTO.builder()
@@ -112,10 +111,11 @@ public class MockServiceImpl implements MockService {
 
             for (Long timeStamp : timeStamps) {
                 EventDetailDTO eventDetailDTO = EventDetailDTO.builder()
-                        .userId(snowflakeId.nextIdStr())
+                        .userCode(snowflakeId.nextIdStr())
                         .username(MockEventUtils.getUserName())
-                        .eventId(snowflakeId.nextIdStr())
-                        .eventTimestamp(timeStamp)
+                        .eventCode(snowflakeId.nextIdStr())
+                        .eventValue(snowflakeId.nextIdStr())
+                        .eventTimestamp(String.valueOf(timeStamp))
                         .build();
                 eventDetailDTOS.add(eventDetailDTO);
 

@@ -1,6 +1,5 @@
 package com.liboshuai.starlink.slr.connector.controller.event;
 
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventUploadDTO;
 import com.liboshuai.starlink.slr.connector.pojo.vo.event.KafkaInfoVO;
 import com.liboshuai.starlink.slr.connector.service.event.EventService;
 import com.liboshuai.starlink.slr.framework.common.pojo.CommonResult;

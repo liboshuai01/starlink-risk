@@ -1,0 +1,77 @@
+{
+  "channel": "game",
+  "rule_code": "ruleCode01",
+  "model_code": "modelCode01",
+  "rule_name": "规则01",
+  "rule_desc": "高频抽奖规则",
+  "condition_operator": "and",
+  "warning_message": "[异常高频抽奖]${bankName}：${campaignName}(${campaignId})中游戏用户(${keyId})最近${windowSize}内抽奖数量为${eventValueSum}，超过${eventThreshold}次，请您及时查看原因！",
+  "warning_interval_value": "5",
+  "warning_interval_unit": "minute",
+  "status": 1,
+  "rule_condition_list": [
+    {
+      "condition_code": "conditionCode01",
+      "rule_code": "ruleCode01",
+      "event_code": "eventCode01",
+      "event_threshold": "10",
+      "window_size_value": "20",
+      "window_size_unit": "minute",
+      "begin_time": "2024-08-21 14:24:32",
+      "end_time": "2024-10-21 14:24:36",
+      "event_info": {
+        "event_code": "eventCode02",
+        "channel": "game",
+        "event_name": "充值",
+        "event_desc": "游戏充值",
+        "event_attribute": [
+          {
+            "attribute_code": "attributeCode01",
+            "event_code": "eventCode01",
+            "field_name": "campaignId",
+            "field_desc": "活动ID"
+          },
+          {
+            "attribute_code": "attributeCode02",
+            "event_code": "eventCode01",
+            "field_name": "campaignName",
+            "field_desc": "活动名称"
+          }
+        ]
+      }
+    },
+    {
+      "condition_code": "conditionCode02",
+      "rule_code": "ruleCode01",
+      "event_code": "eventCode02",
+      "event_threshold": "10",
+      "window_size_value": "20",
+      "window_size_unit": "minute",
+      "begin_time": "2024-08-21 14:24:32",
+      "end_time": "2024-10-21 14:24:36",
+      "event_info": {
+        "event_code": "eventCode02",
+        "channel": "game",
+        "event_name": "充值",
+        "event_desc": "游戏充值",
+        "event_attribute": [
+          {
+            "attribute_code": "attributeCode03",
+            "event_code": "eventCode02",
+            "field_name": "campaignId",
+            "field_desc": "活动ID",
+            "field_type": "String"
+          },
+          {
+            "attribute_code": "attributeCode04",
+            "event_code": "eventCode02",
+            "field_name": "campaignName",
+            "field_desc": "活动名称",
+            "field_type": "String"
+          }
+        ]
+      }
+    }
+  ],
+  "rule_model": "代码省略"
+}
