@@ -82,7 +82,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
 
     @Override
     public void processBroadcastElement(RuleCdcDTO ruleCdcDTO, KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.Context ctx, Collector<String> out) throws Exception {
-        log.info("log 数据: {}", ruleCdcDTO);
+        log.error("processBroadcastElement 数据: {}", ruleCdcDTO);
 //        if (ruleCdcDTO == null) {
 //            ConsoleLogUtil.warning("ruleCdcDTO must not be null");
 //            return;
