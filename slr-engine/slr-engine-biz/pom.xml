@@ -16,9 +16,12 @@
         <java.version>1.8</java.version>
         <!-- Flink 1.12之后有较大的更改, 1.12之前的版本不建议再学 -->
         <flink.version>1.14.2</flink.version>
+        <!-- scala 项目中没有用到 -->
+        <scala.binary.version>2.12</scala.binary.version>
         <!-- fastjson2 -->
-        <!-- 注意：使用的是fastjson2,不是fastjson1 -->
         <fastjson2.version>2.0.12</fastjson2.version>
+        <!-- log4j2 -->
+        <log4j2.version>2.16.0</log4j2.version>
         <!-- 注意：slf4j要使用的版本是 1.7 -->
         <slf4j.version>1.7.25</slf4j.version>
         <!-- 即 com.mysql.cj.jdbc.Driver -->
@@ -29,10 +32,6 @@
         <mysql-cdc.version>2.2.1</mysql-cdc.version>
         <!-- 版本需要严格一致的组件 end -->
 
-        <!-- scala 项目中没有用到 -->
-        <scala.binary.version>2.11</scala.binary.version>
-        <!-- log -->
-        <log4j2.version>2.16.0</log4j2.version>
         <!-- hadoop -->
         <hadoop.version>2.7.7</hadoop.version>
         <!-- Redis 连接器 -->
