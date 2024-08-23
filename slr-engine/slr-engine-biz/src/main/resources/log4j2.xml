@@ -29,7 +29,7 @@
 <!--        &lt;!&ndash;过滤掉spring和mybatis的一些无用的DEBUG信息&ndash;&gt;-->
 <!--        <logger name="org.springframework" level="INFO"></logger>-->
 <!--        <logger name="org.mybatis" level="INFO"></logger>-->
-        <root level="warn">
+        <root level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="RollingFile"/>
         </root>
