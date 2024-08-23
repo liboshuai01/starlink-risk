@@ -41,10 +41,10 @@
             <artifactId>slr-connector-api</artifactId>
             <version>${revision}</version>
         </dependency>
-        <!-- slr-admin-aip 后台管理项目api -->
+        <!-- slr-engine-aip 计算引擎项目api -->
         <dependency>
             <groupId>com.liboshuai.starlink</groupId>
-            <artifactId>slr-admin-api</artifactId>
+            <artifactId>slr-engine-api</artifactId>
             <version>${revision}</version>
         </dependency>
 

@@ -1,6 +1,6 @@
 package com.liboshuai.starlink.slr.connector.service.event.strategy;
 
-import com.liboshuai.starlink.slr.admin.api.constants.DefaultConstants;
+import com.liboshuai.starlink.slr.connector.common.constants.DefaultConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

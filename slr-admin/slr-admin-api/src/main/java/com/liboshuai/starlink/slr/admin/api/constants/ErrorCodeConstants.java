@@ -13,5 +13,6 @@ public interface ErrorCodeConstants {
     ErrorCode RULE_INFO_NOT_EXISTS = new ErrorCode(20001, "规则编号[{}]对应的规则信息不存在");
     ErrorCode RULE_CONDITION_NOT_EXISTS = new ErrorCode(20002, "规则编号[{}]对应的规则条件不存在");
     ErrorCode EVENT_INFO_NOT_EXISTS = new ErrorCode(20003, "事件编号集合[{}]对应的事件信息不存在");
+    ErrorCode RULE_COUNT_NOT_EXISTS = new ErrorCode(20004, "在线规则数量为空");
 
 }

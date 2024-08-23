@@ -1,7 +1,7 @@
 package com.liboshuai.starlink.slr.connector.service.event.strategy;
 
-import com.liboshuai.starlink.slr.admin.api.constants.DefaultConstants;
-import com.liboshuai.starlink.slr.admin.api.dto.event.EventKafkaDTO;
+import com.liboshuai.starlink.slr.connector.common.constants.DefaultConstants;
+import com.liboshuai.starlink.slr.engine.api.dto.EventKafkaDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

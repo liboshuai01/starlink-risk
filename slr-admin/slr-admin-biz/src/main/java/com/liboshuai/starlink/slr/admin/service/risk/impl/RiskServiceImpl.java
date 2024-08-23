@@ -1,10 +1,6 @@
 package com.liboshuai.starlink.slr.admin.service.risk.impl;
 
 import com.liboshuai.starlink.slr.admin.api.constants.ErrorCodeConstants;
-import com.liboshuai.starlink.slr.admin.api.dto.risk.EventAttributeDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.risk.EventInfoDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.risk.RuleConditionDTO;
-import com.liboshuai.starlink.slr.admin.api.dto.risk.RuleInfoDTO;
 import com.liboshuai.starlink.slr.admin.common.component.snowflake.SnowflakeId;
 import com.liboshuai.starlink.slr.admin.convert.risk.EventAttributeConvert;
 import com.liboshuai.starlink.slr.admin.convert.risk.EventInfoConvert;
@@ -17,6 +13,10 @@ import com.liboshuai.starlink.slr.admin.pojo.vo.risk.EventInfoVO;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleConditionVO;
 import com.liboshuai.starlink.slr.admin.pojo.vo.risk.RuleInfoVO;
 import com.liboshuai.starlink.slr.admin.service.risk.RiskService;
+import com.liboshuai.starlink.slr.engine.api.dto.EventAttributeDTO;
+import com.liboshuai.starlink.slr.engine.api.dto.EventInfoDTO;
+import com.liboshuai.starlink.slr.engine.api.dto.RuleConditionDTO;
+import com.liboshuai.starlink.slr.engine.api.dto.RuleInfoDTO;
 import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
 import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -133,23 +133,23 @@ public class RiskServiceImpl implements RiskService {
         } else {
             attributeByEventCodeMap = new HashMap<>();
         }
-        eventInfoDTOList = eventInfoDTOList.stream()
-                .peek(eventInfoDTO -> eventInfoDTO.setEventAttributeDTOList(
-                        attributeByEventCodeMap.get(eventInfoDTO.getEventCode()))
-                )
-                .collect(Collectors.toList());
-
-        // 设置RuleConditionDTO对象的eventInfoDTO属性
-        Map<String, List<EventInfoDTO>> eventInfoByEventCodeMap = eventInfoDTOList.stream()
-                .collect(Collectors.groupingBy(EventInfoDTO::getEventCode));
-        ruleConditionDTOList = ruleConditionDTOList.stream()
-                .peek(ruleConditionDTO -> ruleConditionDTO.setEventInfoDTO(
-                        eventInfoByEventCodeMap.get(ruleConditionDTO.getEventCode()).get(0)
-                ))
-                .collect(Collectors.toList());
-
-        // 设置RuleInfoDTO对象的ruleConditionDTOList属性
-        ruleInfoDTO.setRuleConditionDTOList(ruleConditionDTOList);
+//        eventInfoDTOList = eventInfoDTOList.stream()
+//                .peek(eventInfoDTO -> eventInfoDTO.setEventAttributeDTOList(
+//                        attributeByEventCodeMap.get(eventInfoDTO.getEventCode()))
+//                )
+//                .collect(Collectors.toList());
+//
+//        // 设置RuleConditionDTO对象的eventInfoDTO属性
+//        Map<String, List<EventInfoDTO>> eventInfoByEventCodeMap = eventInfoDTOList.stream()
+//                .collect(Collectors.groupingBy(EventInfoDTO::getEventCode));
+//        ruleConditionDTOList = ruleConditionDTOList.stream()
+//                .peek(ruleConditionDTO -> ruleConditionDTO.setEventInfoDTO(
+//                        eventInfoByEventCodeMap.get(ruleConditionDTO.getEventCode()).get(0)
+//                ))
+//                .collect(Collectors.toList());
+//
+//        // 设置RuleInfoDTO对象的ruleConditionDTOList属性
+//        ruleInfoDTO.setRuleConditionDTOList(ruleConditionDTOList);
         return ruleInfoDTO;
     }
 }
