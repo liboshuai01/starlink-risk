@@ -5,11 +5,9 @@ import com.liboshuai.starlink.slr.engine.calculator.Calculator;
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import com.liboshuai.starlink.slr.engine.utils.jdbc.JdbcUtil;
-import com.liboshuai.starlink.slr.engine.utils.log.ConsoleLogUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
 import groovy.lang.GroovyClassLoader;
-import io.debezium.data.Envelope;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction;
@@ -84,7 +82,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     public void processBroadcastElement(RuleCdcDTO ruleCdcDTO, KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.Context ctx, Collector<String> out) throws Exception {
         log.error("processBroadcastElement 数据: {}", ruleCdcDTO);
 //        if (ruleCdcDTO == null) {
-//            ConsoleLogUtil.warning("ruleCdcDTO must not be null");
+//            log.warn("ruleCdcDTO must not be null");
 //            return;
 //        }
 //        // cdc数据更新
@@ -99,12 +97,12 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
 //            // 在读取、创建、更新，且状态为上线时，则上线一个运算机
 //            Calculator calculator = buildCalculator(ruleInfoDTO, ctx);
 //            calculatorByRuleCodeMap.put(ruleCode, calculator);
-//            ConsoleLogUtil.info("上线或更新一个运算机，规则编号为:{}", ruleCode);
+//            log.info("上线或更新一个运算机，规则编号为:{}", ruleCode);
 //        } else if (Objects.equals(op, Envelope.Operation.UPDATE.code())
 //                && Objects.equals(Objects.requireNonNull(ruleInfoDTO).getStatus(), RuleStatus.DISABLE.getCode())) {
 //            // 在更新，且状态为下线时，则下线一个运算机
 //            calculatorByRuleCodeMap.remove(ruleCode);
-//            ConsoleLogUtil.info("下线一个运算机，规则编号为:{}", ruleCode);
+//            log.info("下线一个运算机，规则编号为:{}", ruleCode);
 //        }
     }
 
@@ -135,11 +133,11 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         String sql = "select rule_count from " + tableName + " where deleted = 0";
         Optional<RuleCountDTO> optionalRuleCountDTO = JdbcUtil.queryOne(sql, new JdbcUtil.BeanPropertyRowMapper<>(RuleCountDTO.class));
         if (!optionalRuleCountDTO.isPresent()) {
-//            ConsoleLogUtil.warning("Mysql Jdbc 查询上线的规则数量为空！");
+//            log.warn("Mysql Jdbc 查询上线的规则数量为空！");
             throw new RuntimeException("Mysql Jdbc 查询上线的规则数量为空！");
         }
         RuleCountDTO ruleCountDTO = optionalRuleCountDTO.get();
-        ConsoleLogUtil.info("Mysql Jdbc 查询上线的规则数量: {}", ruleCountDTO.getRuleCount());
+        log.info("Mysql Jdbc 查询上线的规则数量: {}", ruleCountDTO.getRuleCount());
         return ruleCountDTO.getRuleCount();
     }
 
@@ -153,10 +151,10 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         String sql = "select bank, name from " + tableName + " where is_deleted = 0";
         List<BankDTO> bankDTOList = JdbcUtil.queryList(sql, new JdbcUtil.BeanPropertyRowMapper<>(BankDTO.class));
         if (CollectionUtil.isNullOrEmpty(bankDTOList)) {
-            ConsoleLogUtil.warning("Mysql Jdbc 预加载的银行对象集合bankDTOList为空！");
+            log.warn("Mysql Jdbc 预加载的银行对象集合bankDTOList为空！");
             return new HashMap<>();
         }
-        ConsoleLogUtil.info("Mysql Jdbc 预加载的银行对象集合bankDTOList: {}", JsonUtil.obj2JsonStr(bankDTOList));
+        log.info("Mysql Jdbc 预加载的银行对象集合bankDTOList: {}", JsonUtil.obj2JsonStr(bankDTOList));
         return bankDTOList.stream().collect(Collectors.toMap(BankDTO::getBank, BankDTO::getName));
     }
 }
