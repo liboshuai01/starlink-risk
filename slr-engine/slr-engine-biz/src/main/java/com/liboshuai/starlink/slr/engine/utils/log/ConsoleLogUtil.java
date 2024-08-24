@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.engine.utils.log;
 
 import com.liboshuai.starlink.slr.engine.common.ConsoleLogLevelEnum;
-import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
+import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -101,7 +101,7 @@ public class ConsoleLogUtil {
             return;
         }
         splicingErrorLogs();
-        System.out.print(" : " + StringUtil.format(pattern + ": \n{}", JsonUtil.obj2JsonStr(e)) + "\n");
+        System.out.print(" : " + StringUtil.format(pattern + ": \n{}", JsonUtil.toJsonString(e)) + "\n");
         log.error(pattern + ": ", e);
     }
 }

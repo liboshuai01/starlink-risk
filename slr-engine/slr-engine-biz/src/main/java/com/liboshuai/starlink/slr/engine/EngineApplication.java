@@ -6,10 +6,10 @@ import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.common.StateDescContainer;
 import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import com.liboshuai.starlink.slr.engine.function.CoreFunction;
-import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
 import com.liboshuai.starlink.slr.engine.utils.data.KafkaUtil;
 import com.liboshuai.starlink.slr.engine.utils.data.MysqlUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
+import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -45,7 +45,7 @@ public class EngineApplication {
         BroadcastStream<RuleCdcDTO> broadcastStream = ruleSource.broadcast(StateDescContainer.broadcastRuleStateDesc);
         // 获取业务数据流
         KeyedStream<EventKafkaDTO, String> eventKafkaDTOStringKeyedStream = KafkaUtil.read(env, parameterTool) // 读取数据
-                .map(s -> JsonUtil.jsonStr2Obj(s, EventKafkaDTO.class)) // 转换string为eventKafkaDTO对象
+                .map(s -> JsonUtil.parseObject(s, EventKafkaDTO.class)) // 转换string为eventKafkaDTO对象
                 .assignTimestampsAndWatermarks(buildWatermarkStrategy(parameterTool)) // 定义水位线
                 .uid("register-watermark")
                 .keyBy(EventKafkaDTO::getKeyCode);// keyBy分组

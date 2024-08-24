@@ -11,7 +11,7 @@ import java.util.Base64;
  * @Author liboshuai
  * @Date 2023/11/9 15:13
  */
-public class CryptoUtils {
+public class CryptoUtil {
     /**
      * 密钥
      */

@@ -64,12 +64,12 @@ public class JdbcUtil {
         }
     }
 
-    public static <T> Optional<T> queryOne(String sql, RowMapper<T> rowMapper, Object... params) {
+    public static <T> T queryOne(String sql, RowMapper<T> rowMapper, Object... params) {
         List<T> results = queryList(sql, rowMapper, params);
         if (results != null) {
-            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+            return results.isEmpty() ? null : results.get(0);
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 

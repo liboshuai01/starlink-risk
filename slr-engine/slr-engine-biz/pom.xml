@@ -24,6 +24,8 @@
         <log4j2.version>2.16.0</log4j2.version>
         <!-- 注意：slf4j要使用的版本是 1.7 -->
         <slf4j.version>1.7.25</slf4j.version>
+        <!-- Jackson -->
+        <jacson.version>2.13.5</jacson.version>
         <!-- 即 com.mysql.cj.jdbc.Driver -->
         <mysql.driver.version>8.0.15</mysql.driver.version>
         <!-- mysql CDC连接器 -->
@@ -42,6 +44,8 @@
         <kafka-clients.version>2.4.1</kafka-clients.version>
         <!-- lombok -->
         <lombok.version>1.18.30</lombok.version>
+        <!-- hutool -->
+        <hutool.version>5.8.29</hutool.version>
         <!-- groovy 4.0 -->
         <groovy.version>4.0.10</groovy.version>
         <!-- aviator 5 -->
@@ -181,19 +185,6 @@
             <classifier>tests</classifier>
         </dependency>
 
-        <!-- ============== json处理依赖：这里使用阿里的fastjson2 ============== -->
-        <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2</artifactId>
-            <version>${fastjson2.version}</version>
-        </dependency>
-        <!--fastjson2对SpringFramework等框架的支持现独立在extension包-->
-        <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2-extension</artifactId>
-            <version>${fastjson2.version}</version>
-        </dependency>
-
         <!-- ============ log =================== -->
 
         <!-- log4j2依赖 -->
@@ -223,6 +214,28 @@
             <version>${slf4j.version}</version>
         </dependency>
 
+        <!-- =============== Jackson ===================== -->
+        <!-- Jackson Core -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jacson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jacson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jacson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jacson.version}</version>
+        </dependency>
 
         <!-- =============== hadoop ===================== -->
         <dependency>
@@ -236,13 +249,7 @@
             <version>${hadoop.version}</version>
         </dependency>
 
-        <!-- ============ 其他 =================== -->
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-        </dependency>
+        <!-- ============ 数据源 =================== -->
 
         <!-- kafka-->
         <dependency>
@@ -263,6 +270,20 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql.driver.version}</version>
+        </dependency>
+
+        <!-- ============ 工具 =================== -->
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>${hutool.version}</version>
         </dependency>
 
         <!-- Groovy -->
