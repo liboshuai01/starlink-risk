@@ -91,10 +91,11 @@ public class RiskServiceImpl implements RiskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void putRule(String ruleCode) {
+        String ruleJson = "{\"channel\":\"game\",\"ruleCode\":\"ruleCode01\",\"modelCode\":\"modelCode01\",\"ruleName\":\"规则01\",\"ruleDesc\":\"高频抽奖规则\",\"conditionOperator\":\"and\",\"warningMessage\":\"[异常高频抽奖]${bankName}：${campaignName}(${campaignId})中游戏用户(${keyId})最近${windowSize}内抽奖数量为${eventValueSum}，超过${eventThreshold}次，请您及时查看原因！\",\"warningIntervalValue\":\"5\",\"warningIntervalUnit\":\"minute\",\"status\":1,\"ruleConditionList\":[{\"conditionCode\":\"conditionCode01\",\"ruleCode\":\"ruleCode01\",\"eventCode\":\"eventCode01\",\"eventThreshold\":\"10\",\"windowSizeValue\":\"20\",\"windowSizeUnit\":\"minute\",\"beginTime\":\"2024-08-2114:24:32\",\"endTime\":\"2024-10-2114:24:36\",\"eventInfo\":{\"eventCode\":\"eventCode02\",\"channel\":\"game\",\"eventName\":\"充值\",\"eventDesc\":\"游戏充值\",\"eventAttribute\":[{\"attributeCode\":\"attributeCode01\",\"eventCode\":\"eventCode01\",\"fieldName\":\"campaignId\",\"fieldDesc\":\"活动Id\"},{\"attributeCode\":\"attributeCode02\",\"eventCode\":\"eventCode01\",\"fieldName\":\"campaignName\",\"fieldDesc\":\"活动名称\"}]}},{\"conditionCode\":\"conditionCode02\",\"ruleCode\":\"ruleCode01\",\"eventCode\":\"eventCode02\",\"eventThreshold\":\"10\",\"windowSizeValue\":\"20\",\"windowSizeUnit\":\"minute\",\"beginTime\":\"2024-08-2114:24:32\",\"endTime\":\"2024-10-2114:24:36\",\"eventInfo\":{\"eventCode\":\"eventCode02\",\"channel\":\"game\",\"eventName\":\"充值\",\"eventDesc\":\"游戏充值\",\"eventAttribute\":[{\"attributeCode\":\"attributeCode03\",\"eventCode\":\"eventCode02\",\"fieldName\":\"campaignId\",\"fieldDesc\":\"活动Id\",\"fieldType\":\"string\"},{\"attributeCode\":\"attributeCode04\",\"eventCode\":\"eventCode02\",\"fieldName\":\"campaignName\",\"fieldDesc\":\"活动名称\",\"fieldType\":\"string\"}]}}],\"ruleModel\":\"代码省略\"}";
         // 插入规则json到数据库
         ruleJsonMapper.insert(RuleJsonEntity.builder()
                 .ruleCode(ruleCode)
-                .ruleJson(JsonUtils.toJsonString(buildRuleInfoDTO(ruleCode)))
+                .ruleJson(ruleJson)
                 .build());
         // TODO: 动态生成doris查询sql，并发布查询结果到redis
 
