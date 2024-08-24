@@ -15,7 +15,7 @@ public class StateDescContainer {
      * 规则广播流状态定义
      */
     public static MapStateDescriptor<String, String> BROADCAST_RULE_MAP_STATE_DESC =
-            new MapStateDescriptor<>("broadcastRuleStateDesc", String.class, String.class);
+            new MapStateDescriptor<>("broadcastRuleMapState", String.class, String.class);
 
     /**
      * 最近事件数据缓存状态定义
