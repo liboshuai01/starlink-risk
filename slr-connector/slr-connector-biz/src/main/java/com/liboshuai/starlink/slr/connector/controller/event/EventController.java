@@ -40,4 +40,12 @@ public class EventController {
         eventService.uploadKafka(eventKafkaDTO);
         return success();
     }
+
+    @RateLimiter(count = 10000)
+    @PostMapping("/mock-event-to-kafka")
+    @Operation(summary = "mock事件数据到kafka")
+    public CommonResult<?> mockEventToKafka(@RequestBody EventKafkaDTO eventKafkaDTO) {
+        eventService.mockEventToKafka(eventKafkaDTO);
+        return success();
+    }
 }

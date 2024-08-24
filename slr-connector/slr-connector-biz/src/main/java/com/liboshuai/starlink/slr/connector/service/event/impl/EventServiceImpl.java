@@ -106,6 +106,11 @@ public class EventServiceImpl implements EventService {
 //        eventProvider.batchSend(eventKafkaDTOList);
     }
 
+    @Override
+    public void mockEventToKafka(EventKafkaDTO eventKafkaDTO) {
+        eventProvider.mockEventToKafka(eventKafkaDTO);
+    }
+
 //    /**
 //     * 对象转换
 //     */

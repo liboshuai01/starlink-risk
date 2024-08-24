@@ -14,4 +14,6 @@ public interface EventService {
      * 上送事件数据到kafka
      */
     void uploadKafka(EventKafkaDTO eventKafkaDTO);
+
+    void mockEventToKafka(EventKafkaDTO eventKafkaDTO);
 }
