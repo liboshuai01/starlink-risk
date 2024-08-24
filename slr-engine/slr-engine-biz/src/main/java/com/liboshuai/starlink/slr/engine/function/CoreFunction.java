@@ -12,6 +12,7 @@ import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
 import groovy.lang.GroovyClassLoader;
 import io.debezium.data.Envelope;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.state.*;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
@@ -149,7 +150,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                 || Objects.equals(op, Envelope.Operation.UPDATE.code()))
                 && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.ENABLE.getCode())) {
             // 在读取、创建、更新，且状态为上线时，则上线一个运算机
-            Processor processor = buildProcessor(ruleInfoDTO, ctx);
+            Processor processor = buildProcessor(getRuntimeContext(), ruleInfoDTO);
             processorByRuleCodeMap.put(ruleCode, processor);
             log.warn("上线或更新一个运算机，规则编号为:{}", ruleCode);
         } else if (Objects.equals(op, Envelope.Operation.UPDATE.code())
@@ -163,8 +164,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     /**
      * 构造运算机对象
      */
-    private Processor buildProcessor(RuleInfoDTO ruleInfoDTO,
-                                     KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.Context ctx)
+    private Processor buildProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
             throws InstantiationException {
         RuleModelDTO ruleModelDTO = ruleInfoDTO.getRuleModel();
         if (Objects.isNull(ruleModelDTO)) {
@@ -178,7 +178,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        processor.init(ctx, ruleInfoDTO);
+        processor.open(runtimeContext, ruleInfoDTO);
         return processor;
     }
 
