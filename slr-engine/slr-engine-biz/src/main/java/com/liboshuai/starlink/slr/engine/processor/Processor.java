@@ -2,7 +2,9 @@ package com.liboshuai.starlink.slr.engine.processor;
 
 import com.liboshuai.starlink.slr.engine.api.dto.EventKafkaDTO;
 import com.liboshuai.starlink.slr.engine.api.dto.RuleInfoDTO;
+import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction;
 import org.apache.flink.util.Collector;
 
 import java.io.IOException;
@@ -25,7 +27,7 @@ public interface Processor {
     /**
      * 运算机定时器
      */
-    void onTime();
+    void onTimer(long timestamp, KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx, Collector<String> out) throws Exception;
 
     /**
      * 是否跨历史

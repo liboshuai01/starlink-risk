@@ -105,6 +105,13 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                 processor.process(eventKafkaDTO, out);
             }
         }
+        // 注册定时器
+        // 计算下一分钟的时间戳（整分钟）
+        String timestamp = eventKafkaDTO.getTimestamp();
+        // TODO: 需要确定此计算方式是否正确，还是阿里版本的正确
+        long fireTime = Long.parseLong(timestamp) - Long.parseLong(timestamp) % 60000 + 60000;
+        // 注册一个定时器，指定时间到达时触发onTimer方法
+        ctx.timerService().registerProcessingTimeTimer(fireTime);
     }
 
     private void waitForInitAllProcessor() throws IOException, InterruptedException {
@@ -214,6 +221,17 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         log.warn("Mysql Jdbc 预加载的银行对象集合bankDTOList: {}", JsonUtil.toJsonString(bankDTOList));
         for (BankDTO bankDTO : bankDTOList) {
             bankMapState.put(bankDTO.getBank(), bankDTO.getName());
+        }
+    }
+
+    @Override
+    public void onTimer(long timestamp, KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx, Collector<String> out) throws Exception {
+        // 数据遍历经过每个规则运算机
+        for (Map.Entry<String, Processor> stringProcessorEntry : processorByRuleCodeMap.entrySet()) {
+            String ruleCode = stringProcessorEntry.getKey();
+            Processor processor = stringProcessorEntry.getValue();
+            // 调用定时器
+            processor.onTimer(timestamp, ctx, out);
         }
     }
 }

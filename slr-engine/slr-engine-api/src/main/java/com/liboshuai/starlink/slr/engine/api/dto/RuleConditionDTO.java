@@ -22,6 +22,8 @@ public class RuleConditionDTO implements Serializable {
     private String eventThreshold;
     private String windowSizeValue;
     private String windowSizeUnit;
+    // todo: 数据库待补充
+    private String windowSize;
     private String beginTime;
     private String endTime;
     private EventInfoDTO eventInfo;
