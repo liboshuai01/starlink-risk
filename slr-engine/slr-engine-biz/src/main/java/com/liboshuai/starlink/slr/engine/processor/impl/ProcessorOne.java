@@ -52,17 +52,18 @@ public class ProcessorOne implements Processor {
 
     @Override
     public void open(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) {
+        String ruleCode = ruleInfoDTO.getRuleCode();
         ruleInfoDTOValueState = runtimeContext.getState(
-                new ValueStateDescriptor<>("ruleInfoDTOValueState", RuleInfoDTO.class)
+                new ValueStateDescriptor<>("ruleInfoDTOValueState_" + ruleCode, RuleInfoDTO.class)
         );
         smallMapState = runtimeContext.getMapState(
-                new MapStateDescriptor<>("smallMapState", String.class, Long.class)
+                new MapStateDescriptor<>("smallMapState_" + ruleCode, String.class, Long.class)
         );
         bigMapState = runtimeContext.getMapState(
-                new MapStateDescriptor<>("bigMapState", Types.STRING, Types.LIST(Types.LONG))
+                new MapStateDescriptor<>("bigMapState_" + ruleCode, Types.STRING, Types.LIST(Types.LONG))
         );
         lastWarningTimeState = runtimeContext.getState(
-                new ValueStateDescriptor<>("lastWarningTimeState", Long.class)
+                new ValueStateDescriptor<>("lastWarningTimeState_" + ruleCode, Long.class)
         );
     }
 
@@ -91,9 +92,9 @@ public class ProcessorOne implements Processor {
                         && eventTime.isAfter(historyTimeline)) {
                     if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
                         // 跨历史时间段，当状态值为空时从redis获取初始值
-                        // TODO: redis key设计要根据doris查询结果进行再设计
-                        String initValue = RedisUtil.getString(
-                                ruleConditionDTO.getRuleCode() + ruleConditionDTO.getEventCode()
+                        String initValue = RedisUtil.hget(
+                                ruleConditionDTO.getRuleCode() + ruleConditionDTO.getEventCode(),
+                                eventKafkaDTO.getKeyCode()
                         );
                         smallMapState.put(eventKafkaDTO.getEventCode(), Long.parseLong(initValue));
                     }
