@@ -1,5 +1,6 @@
 package com.liboshuai.starlink.slr.engine.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -39,10 +40,12 @@ public class RuleConditionDTO implements Serializable {
     /**
      * 固定范围开始时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime beginTime;
     /**
      * 固定范围结束时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endTime;
     /**
      * 滑动窗口大小
@@ -55,6 +58,7 @@ public class RuleConditionDTO implements Serializable {
     /**
      * 跨历史时间点
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime crossHistoryTimeline;
     /**
      * 事件信息

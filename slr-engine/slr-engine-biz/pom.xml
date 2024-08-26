@@ -18,8 +18,6 @@
         <flink.version>1.14.2</flink.version>
         <!-- scala 项目中没有用到 -->
         <scala.binary.version>2.12</scala.binary.version>
-        <!-- fastjson2 -->
-        <fastjson2.version>2.0.12</fastjson2.version>
         <!-- log4j2 -->
         <log4j2.version>2.16.0</log4j2.version>
         <!-- 注意：slf4j要使用的版本是 1.7 -->
