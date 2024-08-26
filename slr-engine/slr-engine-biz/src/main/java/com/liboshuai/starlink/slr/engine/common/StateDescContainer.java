@@ -3,7 +3,6 @@ package com.liboshuai.starlink.slr.engine.common;
 import com.liboshuai.starlink.slr.engine.api.dto.EventKafkaDTO;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.MapStateDescriptor;
-import org.apache.flink.api.common.state.ValueStateDescriptor;
 
 /**
  * @Author: liboshuai
@@ -26,15 +25,5 @@ public class StateDescContainer {
      * 旧规则状态定义
      */
     public static MapStateDescriptor<String, Object> OLD_RULE_MAP_STATE_DESC = new MapStateDescriptor<>("oldRuleMapState", String.class, Object.class);
-
-    /**
-     * 在线规则数量
-     */
-    public static ValueStateDescriptor<Long> ONLINE_RULE_COUNT_STATE_DESC = new ValueStateDescriptor<>("onlineRuleCountState", Long.class);
-
-    /**
-     * 银行数据状态定义
-     */
-    public static MapStateDescriptor<String, String> BANK_MAP_STATE_DESC = new MapStateDescriptor<>("bankMapState", String.class, String.class);
 
 }

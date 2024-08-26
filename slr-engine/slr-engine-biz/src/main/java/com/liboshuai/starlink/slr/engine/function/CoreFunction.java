@@ -16,7 +16,6 @@ import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.StateTtlConfig;
-import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction;
@@ -25,10 +24,7 @@ import org.apache.flink.util.Collector;
 import org.apache.flink.util.StringUtils;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -65,35 +61,39 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     /**
      * 在线规则数量
      */
-    private ValueState<Long> onlineRuleCountState;
+    private Long onlineRuleCount;
 
     /**
      * 银行数据
      */
-    private MapState<String, String> bankMapState;
+    private Map<String, String> bankMapState;
 
-
+    /**
+     * 注意千万不要在open方法中对状态进行赋值操作，否则进行的赋值，在processElement等方法中并不能获取到
+     */
     @Override
     public void open(Configuration parameters) throws Exception {
+        log.warn("调用一次open方法");
         processorByRuleCodeMap = new ConcurrentHashMap<>();
         groovyClassLoader = new GroovyClassLoader();
         RECENT_EVENT_LIST_STATE_DESC
                 .enableTimeToLive(StateTtlConfig.newBuilder(Time.minutes(15)).neverReturnExpired().build());
         recentEventListState = getRuntimeContext().getListState(RECENT_EVENT_LIST_STATE_DESC);
         oldRuleListState = getRuntimeContext().getMapState(OLD_RULE_MAP_STATE_DESC);
-        onlineRuleCountState = getRuntimeContext().getState(ONLINE_RULE_COUNT_STATE_DESC);
-        bankMapState = getRuntimeContext().getMapState(BANK_MAP_STATE_DESC);
         // 查询在线规则数量
-        queryOnlineRuleCount();
+        onlineRuleCount = queryOnlineRuleCount();
         // 查询银行数据
-        queryBank();
+        bankMapState = queryBank();
     }
 
+    /**
+     * TODO：测试的时候先不使用groovy，还是直接使用java代码，方便调试
+     */
     @Override
     public void processElement(EventKafkaDTO eventKafkaDTO,
                                KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.ReadOnlyContext ctx,
                                Collector<String> out) throws Exception {
-        log.warn("事件处理流-eventKafkaDTO: {}", JsonUtil.toJsonString(eventKafkaDTO));
+        log.warn("调用一次processElement方法, eventKafkaDTO: {}, out: {}", eventKafkaDTO, out);
         // 等待所有运算机初始化完成
         waitForInitAllProcessor();
         // 将事件放入缓存列表中
@@ -127,9 +127,8 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     private void waitForInitAllProcessor() throws IOException, InterruptedException {
         long currentOnlineRuleCount = getCurrentOnlineRuleCount();
         while (true) {
-            log.warn("事件处理流-onlineRuleCount:{}, currentOnlineRuleCount: {}",
-                    onlineRuleCountState.value(), currentOnlineRuleCount);
-            if (onlineRuleCountState.value() == currentOnlineRuleCount) {
+            log.warn("事件处理流-onlineRuleCount:{}, currentOnlineRuleCount: {}", onlineRuleCount, currentOnlineRuleCount);
+            if (onlineRuleCount == currentOnlineRuleCount) {
                 break;
             }
             TimeUnit.SECONDS.sleep(1);
@@ -150,7 +149,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     public void processBroadcastElement(RuleCdcDTO ruleCdcDTO,
                                         KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.Context ctx,
                                         Collector<String> out) throws Exception {
-        log.warn("processBroadcastElement 数据: {}", JsonUtil.toJsonString(ruleCdcDTO));
+        log.warn("调用一次processBroadcastElement方法, ruleCdcDTO: {}, out: {}", ruleCdcDTO, out);
         if (ruleCdcDTO == null) {
             throw new BusinessException("Mysql Cdc 广播流 ruleCdcDTO 必须非空");
         }
@@ -159,7 +158,6 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         RuleJsonDTO ruleCdcDTOAfter = ruleCdcDTO.getAfter();
         String ruleCode = ruleCdcDTOAfter.getRuleCode();
         String ruleJson = ruleCdcDTOAfter.getRuleJson();
-        // FIXME: JSON转换失败
         RuleInfoDTO ruleInfoDTO = JsonUtil.parseObject(ruleJson, RuleInfoDTO.class);
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("Mysql Cdc 广播流 ruleInfoDTO 必须非空");
@@ -183,7 +181,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
      * 构造运算机对象
      */
     private Processor buildProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
-            throws InstantiationException, IllegalAccessException {
+            throws InstantiationException, IllegalAccessException, IOException {
         String ruleModelGroovyCode = ruleInfoDTO.getRuleModelGroovyCode();
         if (StringUtils.isNullOrWhitespaceOnly(ruleModelGroovyCode)) {
             throw new BusinessException("运算机模型代码 ruleModelGroovyCode 必须非空");
@@ -197,23 +195,26 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     /**
      * 查询上线的规则数量
      */
-    private void queryOnlineRuleCount() throws IOException {
+    private Long queryOnlineRuleCount() throws IOException {
         // 获取规则表名
         String tableName = ParameterUtil.getParameters().get(ParameterConstants.MYSQL_TABLE_RULE_COUNT);
         // 查询规则数据
         String sql = "select online_count from " + tableName + " where deleted = 0";
-        RuleOnlineCountDTO ruleOnlineCountDTO = JdbcUtil.queryOne(sql, new JdbcUtil.BeanPropertyRowMapper<>(RuleOnlineCountDTO.class));
+        RuleOnlineCountDTO ruleOnlineCountDTO = JdbcUtil.queryOne(
+                sql, new JdbcUtil.BeanPropertyRowMapper<>(RuleOnlineCountDTO.class)
+        );
         if (Objects.isNull(ruleOnlineCountDTO)) {
             throw new BusinessException("Mysql Jdbc 查询上线的规则数量为空！");
         }
         log.warn("Mysql Jdbc 查询上线的规则数量: {}", ruleOnlineCountDTO.getOnlineCount());
-        onlineRuleCountState.update(ruleOnlineCountDTO.getOnlineCount());
+        return ruleOnlineCountDTO.getOnlineCount();
     }
 
     /**
      * 查询银行数据
      */
-    private void queryBank() throws Exception {
+    private Map<String, String> queryBank() throws Exception {
+        Map<String, String> bankMap = new HashMap<>();
         // 获取规则表名
         String tableName = ParameterUtil.getParameters().get(ParameterConstants.MYSQL_TABLE_BANK);
         // 查询规则数据
@@ -221,22 +222,26 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         List<BankDTO> bankDTOList = JdbcUtil.queryList(sql, new JdbcUtil.BeanPropertyRowMapper<>(BankDTO.class));
         if (CollectionUtil.isNullOrEmpty(bankDTOList)) {
             log.warn("Mysql Jdbc 预加载的银行对象集合bankDTOList为空！");
-            return;
+            return new HashMap<>();
         }
         log.warn("Mysql Jdbc 预加载的银行对象集合bankDTOList: {}", JsonUtil.toJsonString(bankDTOList));
         for (BankDTO bankDTO : bankDTOList) {
-            bankMapState.put(bankDTO.getBank(), bankDTO.getName());
+            bankMap.put(bankDTO.getBank(), bankDTO.getName());
         }
+        return bankMap;
     }
 
     @Override
-    public void onTimer(long timestamp, KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx, Collector<String> out) throws Exception {
+    public void onTimer(long timestamp,
+                        KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx,
+                        Collector<String> out) throws Exception {
+        log.warn("调用一次onTimer方法, timestamp: {}, out: {}", timestamp, out);
         // 数据遍历经过每个规则运算机
         for (Map.Entry<String, Processor> stringProcessorEntry : processorByRuleCodeMap.entrySet()) {
             String ruleCode = stringProcessorEntry.getKey();
             Processor processor = stringProcessorEntry.getValue();
             // 调用定时器
-            processor.onTimer(timestamp, ctx, out);
+            processor.onTimer(timestamp, out);
         }
     }
 }
