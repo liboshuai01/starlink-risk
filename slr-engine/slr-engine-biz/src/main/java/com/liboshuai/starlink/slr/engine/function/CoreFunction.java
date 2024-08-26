@@ -121,6 +121,9 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         ctx.timerService().registerProcessingTimeTimer(fireTime);
     }
 
+    /**
+     * 等待所有运算机初始化完成
+     */
     private void waitForInitAllProcessor() throws IOException, InterruptedException {
         long currentOnlineRuleCount = getCurrentOnlineRuleCount();
         while (true) {
@@ -156,6 +159,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         RuleJsonDTO ruleCdcDTOAfter = ruleCdcDTO.getAfter();
         String ruleCode = ruleCdcDTOAfter.getRuleCode();
         String ruleJson = ruleCdcDTOAfter.getRuleJson();
+        // FIXME: JSON转换失败
         RuleInfoDTO ruleInfoDTO = JsonUtil.parseObject(ruleJson, RuleInfoDTO.class);
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("Mysql Cdc 广播流 ruleInfoDTO 必须非空");
@@ -197,7 +201,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         // 获取规则表名
         String tableName = ParameterUtil.getParameters().get(ParameterConstants.MYSQL_TABLE_RULE_COUNT);
         // 查询规则数据
-        String sql = "select rule_count from " + tableName + " where deleted = 0";
+        String sql = "select online_count from " + tableName + " where deleted = 0";
         RuleOnlineCountDTO ruleOnlineCountDTO = JdbcUtil.queryOne(sql, new JdbcUtil.BeanPropertyRowMapper<>(RuleOnlineCountDTO.class));
         if (Objects.isNull(ruleOnlineCountDTO)) {
             throw new BusinessException("Mysql Jdbc 查询上线的规则数量为空！");
