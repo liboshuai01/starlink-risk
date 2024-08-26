@@ -7,7 +7,11 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
+/**
+ * 规则条件DTO对象
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,19 +20,44 @@ import java.io.Serializable;
 public class RuleConditionDTO implements Serializable {
     private static final long serialVersionUID = 1371182535943297209L;
 
-    private String conditionCode;
+    /**
+     * 规则编号
+     */
     private String ruleCode;
+    /**
+     * 事件编号
+     */
     private String eventCode;
-    // TODO: 数据库待补充
-    private Boolean crossHistory;
-    // TODO: 数据库待补充
-    private String historyTimeline;
-    private String eventThreshold;
-    private String windowSizeValue;
-    private String windowSizeUnit;
-    // todo: 数据库待补充
-    private String windowSize;
-    private String beginTime;
-    private String endTime;
+    /**
+     * 事件阈值
+     */
+    private Long eventThreshold;
+    /**
+     * 条件类型：0-固定范围条件；1-滑动窗口条件
+     */
+    private Integer conditionType;
+    /**
+     * 固定范围开始时间
+     */
+    private LocalDateTime beginTime;
+    /**
+     * 固定范围结束时间
+     */
+    private LocalDateTime endTime;
+    /**
+     * 滑动窗口大小
+     */
+    private Long windowSize;
+    /**
+     * 是否跨历史（其中周期规则固定为跨历史）：0-否，1-是
+     */
+    private Boolean isCrossHistory;
+    /**
+     * 跨历史时间点
+     */
+    private LocalDateTime crossHistoryTimeline;
+    /**
+     * 事件信息
+     */
     private EventInfoDTO eventInfo;
 }

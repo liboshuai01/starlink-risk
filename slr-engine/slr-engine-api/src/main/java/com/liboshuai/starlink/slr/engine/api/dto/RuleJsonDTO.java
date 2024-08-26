@@ -8,6 +8,9 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 
+/**
+ * 规则json字符串DTO对象
+ */
 @Data
 @Builder
 @NoArgsConstructor

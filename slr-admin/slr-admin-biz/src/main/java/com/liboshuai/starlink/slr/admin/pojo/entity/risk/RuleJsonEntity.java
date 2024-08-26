@@ -1,21 +1,29 @@
 package com.liboshuai.starlink.slr.admin.pojo.entity.risk;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseDO;
+import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseEntity;
 import lombok.*;
+import lombok.experimental.Accessors;
 
+/**
+ * 规则json字符串DTO对象
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-@TableName("slr_rule_json")
-public class RuleJsonEntity extends BaseDO {
+public class RuleJsonEntity extends BaseEntity {
+    private static final long serialVersionUID = -6940398101611093673L;
 
-    private static final long serialVersionUID = 8848773086432812465L;
+    /**
+     * 规则编号
+     */
+    private String ruleCode;
 
-    private String ruleCode; // 规则编号
-
-    private String ruleJson; // 规则json
+    /**
+     * 规则json
+     */
+    private String ruleJson;
 
 }

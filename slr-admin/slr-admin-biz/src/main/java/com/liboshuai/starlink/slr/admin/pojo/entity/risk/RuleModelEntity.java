@@ -4,25 +4,28 @@ import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseEntity;
 import lombok.*;
 import lombok.experimental.Accessors;
 
+/**
+ * 规则模型DTO对象
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-public class EventAttributeEntity extends BaseEntity {
-    private static final long serialVersionUID = -2462792763696684790L;
+public class RuleModelEntity extends BaseEntity {
+    private static final long serialVersionUID = -3205613240738671165L;
 
     /**
-     * 事件编号
+     * 模型编号
      */
-    private String eventCode;
+    private String modelCode;
     /**
-     * 字段名称
+     * 规则模型groovy代码
      */
-    private String fieldName;
+    private String groovy;
     /**
-     * 字段描述
+     * 模型版本号
      */
-    private String fieldDesc;
+    private Long version;
 }

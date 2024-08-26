@@ -7,12 +7,12 @@ import lombok.Getter;
  */
 @Getter
 public enum RuleConditionOperatorTypeEnum {
-    AND("AND", "与"),
-    OR("OR","或")
+    AND(0, "与"),
+    OR(1,"或")
     ;
-    private final String code;
+    private final Integer code;
     private final String name;
-    RuleConditionOperatorTypeEnum(String code, String name) {
+    RuleConditionOperatorTypeEnum(Integer code, String name) {
         this.code = code;
         this.name = name;
     }

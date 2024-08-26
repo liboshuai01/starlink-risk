@@ -76,19 +76,18 @@ public class ProcessorOne implements Processor {
         String timestamp = eventKafkaDTO.getTimestamp();
         LocalDateTime eventTime = DateUtil.convertTimestamp2LocalDateTime(Long.parseLong(timestamp));
         // 获取规则条件
-        List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionList();
+        List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
             throw new BusinessException("运算机 ruleConditionList 必须非空");
         }
         // 多个规则条件进行窗口值累加
         for (RuleConditionDTO ruleConditionDTO : ruleConditionList) {
             // 划分为跨历史时间段 和 不跨历史时间段
-            if (ruleConditionDTO.getCrossHistory()) { // 跨历史时间段
-                String historyTimelineStr = ruleConditionDTO.getHistoryTimeline();
-                LocalDateTime historyTimeline = DateUtil.convertStr2LocalDateTime(historyTimelineStr);
+            if (ruleConditionDTO.getIsCrossHistory()) { // 跨历史时间段
+                LocalDateTime crossHistoryTimeline = ruleConditionDTO.getCrossHistoryTimeline();
                 // 匹配到事件时，进行事件值累加
                 if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
-                        && eventTime.isAfter(historyTimeline)) {
+                        && eventTime.isAfter(crossHistoryTimeline)) {
                     if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
                         // 跨历史时间段，当状态值为空时从redis获取初始值
                         String initValue = RedisUtil.hget(
@@ -121,7 +120,7 @@ public class ProcessorOne implements Processor {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
         // 获取规则条件
-        List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionList();
+        List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
             throw new BusinessException("运算机 ruleConditionList 必须非空");
         }
@@ -161,8 +160,8 @@ public class ProcessorOne implements Processor {
         for (Map.Entry<String, List<Long>> bigMapEntry : bigMap.entrySet()) {
             String eventCode = bigMapEntry.getKey();
             List<Long> eventValueList = bigMapEntry.getValue();
-            String windowSize = ruleConditionMapByEventCode.get(eventCode).getWindowSize();
-            if (eventValueList.size() > Long.parseLong(windowSize)) {
+            Long windowSize = ruleConditionMapByEventCode.get(eventCode).getWindowSize();
+            if (eventValueList.size() > windowSize) {
                 eventValueList = eventValueList.subList(eventValueList.size() - 20, eventValueList.size());
             }
             bigMap.put(eventCode, eventValueList);
@@ -179,20 +178,20 @@ public class ProcessorOne implements Processor {
             String eventCode = bigMapEntry.getKey();
             List<Long> eventValueList = bigMapEntry.getValue();
             long eventValueSum = eventValueList.stream().mapToLong(Long::longValue).sum();
-            String eventThreshold = ruleConditionMapByEventCode.get(eventCode).getEventThreshold();
-            eventCodeAndWarnResult.put(eventCode, eventValueSum > Long.parseLong(eventThreshold));
+            Long eventThreshold = ruleConditionMapByEventCode.get(eventCode).getEventThreshold();
+            eventCodeAndWarnResult.put(eventCode, eventValueSum > eventThreshold);
         }
-        String conditionOperator = ruleInfoDTO.getConditionOperator();
+        Integer conditionOperator = ruleInfoDTO.getCombinedConditionOperator();
         // 根据规则中事件条件表达式组合判断事件结果 与预警频率 判断否是触发预警
         boolean eventResult = evaluateEventResults(eventCodeAndWarnResult, conditionOperator);
-        if (eventResult && (timestamp - lastWarningTimeState.value() >= Long.parseLong(ruleInfoDTO.getWarningIntervalValue()))) {
+        if (eventResult && (timestamp - lastWarningTimeState.value() >= ruleInfoDTO.getWarnInterval())) {
             lastWarningTimeState.update(timestamp);
             // TODO: 进行预警信息拼接组合
             out.collect("事件[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
         }
     }
 
-    public static boolean evaluateEventResults(Map<String, Boolean> eventCodeAndWarnResult, String conditionOperator) {
+    public static boolean evaluateEventResults(Map<String, Boolean> eventCodeAndWarnResult, Integer conditionOperator) {
         // 初始化结果变量
         boolean result = conditionOperator.equals(RuleConditionOperatorTypeEnum.AND.getCode());
 

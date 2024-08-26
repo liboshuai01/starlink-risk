@@ -16,8 +16,16 @@ import java.io.Serializable;
 public class EventAttributeDTO implements Serializable {
     private static final long serialVersionUID = -2462792763696684790L;
 
-    private String attributeCode;
+    /**
+     * 事件编号
+     */
     private String eventCode;
+    /**
+     * 字段名称
+     */
     private String fieldName;
+    /**
+     * 字段描述
+     */
     private String fieldDesc;
 }

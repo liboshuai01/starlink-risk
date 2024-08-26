@@ -4,25 +4,21 @@ import com.liboshuai.starlink.slr.framework.mybatis.core.dataobject.BaseEntity;
 import lombok.*;
 import lombok.experimental.Accessors;
 
+/**
+ * 在线规则数据
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-public class EventAttributeEntity extends BaseEntity {
-    private static final long serialVersionUID = -2462792763696684790L;
+public class RuleOnlineCountEntity extends BaseEntity {
+    private static final long serialVersionUID = -6940398101611093673L;
 
     /**
-     * 事件编号
+     * 规则在线数量
      */
-    private String eventCode;
-    /**
-     * 字段名称
-     */
-    private String fieldName;
-    /**
-     * 字段描述
-     */
-    private String fieldDesc;
+    private Long onlineCount;
+
 }

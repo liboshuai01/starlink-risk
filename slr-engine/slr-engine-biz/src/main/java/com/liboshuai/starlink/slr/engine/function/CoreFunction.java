@@ -179,11 +179,11 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
      */
     private Processor buildProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
             throws InstantiationException {
-        RuleModelDTO ruleModelDTO = ruleInfoDTO.getRuleModel();
+        RuleModelDTO ruleModelDTO = ruleInfoDTO.getRuleModelGroovyCode();
         if (Objects.isNull(ruleModelDTO)) {
             throw new BusinessException("运算机模型 ruleModelDTO 必须非空");
         }
-        String ruleModel = ruleModelDTO.getRuleModel();
+        String ruleModel = ruleModelDTO.getGroovy();
         Class aClass = groovyClassLoader.parseClass(ruleModel);
         Processor processor;
         try {
@@ -203,12 +203,12 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         String tableName = ParameterUtil.getParameters().get(ParameterConstants.MYSQL_TABLE_RULE_COUNT);
         // 查询规则数据
         String sql = "select rule_count from " + tableName + " where deleted = 0";
-        RuleCountDTO ruleCountDTO = JdbcUtil.queryOne(sql, new JdbcUtil.BeanPropertyRowMapper<>(RuleCountDTO.class));
-        if (Objects.isNull(ruleCountDTO)) {
+        RuleOnlineCountDTO ruleOnlineCountDTO = JdbcUtil.queryOne(sql, new JdbcUtil.BeanPropertyRowMapper<>(RuleOnlineCountDTO.class));
+        if (Objects.isNull(ruleOnlineCountDTO)) {
             throw new BusinessException("Mysql Jdbc 查询上线的规则数量为空！");
         }
-        log.warn("Mysql Jdbc 查询上线的规则数量: {}", ruleCountDTO.getRuleCount());
-        onlineRuleCountState.update(ruleCountDTO.getRuleCount());
+        log.warn("Mysql Jdbc 查询上线的规则数量: {}", ruleOnlineCountDTO.getOnlineCount());
+        onlineRuleCountState.update(ruleOnlineCountDTO.getOnlineCount());
     }
 
     /**
