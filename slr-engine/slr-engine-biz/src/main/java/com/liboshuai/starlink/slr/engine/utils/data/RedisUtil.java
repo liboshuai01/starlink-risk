@@ -2,7 +2,6 @@ package com.liboshuai.starlink.slr.engine.utils.data;
 
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;

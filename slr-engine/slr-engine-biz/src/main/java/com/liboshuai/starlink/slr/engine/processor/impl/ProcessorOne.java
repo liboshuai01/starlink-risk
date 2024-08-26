@@ -9,7 +9,6 @@ import com.liboshuai.starlink.slr.engine.exception.BusinessException;
 import com.liboshuai.starlink.slr.engine.processor.Processor;
 import com.liboshuai.starlink.slr.engine.utils.data.RedisUtil;
 import com.liboshuai.starlink.slr.engine.utils.date.DateUtil;
-import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.state.MapState;
@@ -113,43 +112,6 @@ public class ProcessorOne implements Processor {
                 }
             }
         }
-    }
-
-    /**
-     * TODO: 代码迁移到admin项目
-     * 根据窗口值与单位计算获取窗口毫秒值
-     */
-    private static int getWindowSize(String windowSizeUnit, String windowSizeValue) {
-        int windowSize = 0;
-        switch (windowSizeUnit) {
-            case "MILLISECOND":
-                windowSize = Integer.parseInt(windowSizeValue);
-                break;
-            case "SECOND":
-                windowSize = Integer.parseInt(windowSizeValue) * 1000;
-                break;
-            case "MINUTE":
-                windowSize = Integer.parseInt(windowSizeValue) * 60 * 1000;
-                break;
-            case "HOUR":
-                windowSize = Integer.parseInt(windowSizeValue) * 60 * 60 * 1000;
-                break;
-            case "DAY":
-                windowSize = Integer.parseInt(windowSizeValue) * 24 * 60 * 60 * 1000;
-                break;
-            case "WEEK":
-                windowSize = Integer.parseInt(windowSizeValue) * 7 * 24 * 60 * 60 * 1000;
-                break;
-            case "MONTH":
-                windowSize = Integer.parseInt(windowSizeValue) * 30 * 24 * 60 * 60 * 1000;
-                break;
-            case "YEAR":
-                windowSize = Integer.parseInt(windowSizeValue) * 365 * 24 * 60 * 60 * 1000;
-                break;
-            default:
-                throw new BusinessException(StringUtil.format("时间窗口单位 [{}] 不存在", windowSizeUnit));
-        }
-        return windowSize;
     }
 
     @Override

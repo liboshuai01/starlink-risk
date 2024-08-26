@@ -18,7 +18,6 @@ import com.liboshuai.starlink.slr.engine.api.dto.EventInfoDTO;
 import com.liboshuai.starlink.slr.engine.api.dto.RuleConditionDTO;
 import com.liboshuai.starlink.slr.engine.api.dto.RuleInfoDTO;
 import com.liboshuai.starlink.slr.framework.common.exception.util.ServiceExceptionUtil;
-import com.liboshuai.starlink.slr.framework.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -152,5 +151,41 @@ public class RiskServiceImpl implements RiskService {
 //        // 设置RuleInfoDTO对象的ruleConditionDTOList属性
 //        ruleInfoDTO.setRuleConditionDTOList(ruleConditionDTOList);
         return ruleInfoDTO;
+    }
+
+    /**
+     * 根据窗口值与单位计算获取窗口毫秒值
+     */
+    private static int getWindowSize(String windowSizeUnit, String windowSizeValue) {
+        int windowSize = 0;
+        switch (windowSizeUnit) {
+            case "MILLISECOND":
+                windowSize = Integer.parseInt(windowSizeValue);
+                break;
+            case "SECOND":
+                windowSize = Integer.parseInt(windowSizeValue) * 1000;
+                break;
+            case "MINUTE":
+                windowSize = Integer.parseInt(windowSizeValue) * 60 * 1000;
+                break;
+            case "HOUR":
+                windowSize = Integer.parseInt(windowSizeValue) * 60 * 60 * 1000;
+                break;
+            case "DAY":
+                windowSize = Integer.parseInt(windowSizeValue) * 24 * 60 * 60 * 1000;
+                break;
+            case "WEEK":
+                windowSize = Integer.parseInt(windowSizeValue) * 7 * 24 * 60 * 60 * 1000;
+                break;
+            case "MONTH":
+                windowSize = Integer.parseInt(windowSizeValue) * 30 * 24 * 60 * 60 * 1000;
+                break;
+            case "YEAR":
+                windowSize = Integer.parseInt(windowSizeValue) * 365 * 24 * 60 * 60 * 1000;
+                break;
+            default:
+                throw ServiceExceptionUtil.exception(ErrorCodeConstants.WINDOW_UNIT_NOT_EXISTS, windowSizeUnit);
+        }
+        return windowSize;
     }
 }
