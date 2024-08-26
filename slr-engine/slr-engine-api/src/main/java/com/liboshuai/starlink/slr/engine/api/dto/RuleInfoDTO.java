@@ -31,6 +31,8 @@ public class RuleInfoDTO implements Serializable {
     private String warningMessage;
     private String warningIntervalValue;
     private String warningIntervalUnit;
+    // TODO: 待补充到数据库
+    private String warningInterval;
     private Integer status;
     private List<RuleConditionDTO> ruleConditionList;
     private RuleModelDTO ruleModel;

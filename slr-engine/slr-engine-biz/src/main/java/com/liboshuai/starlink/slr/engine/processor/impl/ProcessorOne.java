@@ -48,6 +48,11 @@ public class ProcessorOne implements Processor {
      */
     private MapState<String, List<Long>> bigMapState;
 
+    /**
+     * 最近一次预警时间
+     */
+    private ValueState<Long> lastWarningTimeState;
+
     @Override
     public void open(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) {
         ruleInfoDTOValueState = runtimeContext.getState(
@@ -58,6 +63,9 @@ public class ProcessorOne implements Processor {
         );
         bigMapState = runtimeContext.getMapState(
                 new MapStateDescriptor<>("bigMapState", Types.STRING, Types.LIST(Types.LONG))
+        );
+        lastWarningTimeState = runtimeContext.getState(
+                new ValueStateDescriptor<>("lastWarningTimeState", Long.class)
         );
     }
 
@@ -201,11 +209,11 @@ public class ProcessorOne implements Processor {
             eventCodeAndWarnResult.put(eventCode, eventValueSum > Long.parseLong(eventThreshold));
         }
         String conditionOperator = ruleInfoDTO.getConditionOperator();
-        // 根据规则中事件条件表达式组合判断事件结果是否触发预警
+        // 根据规则中事件条件表达式组合判断事件结果 与预警频率 判断否是触发预警
         boolean eventResult = evaluateEventResults(eventCodeAndWarnResult, conditionOperator);
-        if (eventResult) {
-            // TODO: 根据规则中的预警信息拼接
-            // TODO: 进行预警信息发送频率的控制
+        if (eventResult && (timestamp - lastWarningTimeState.value() >= Long.parseLong(ruleInfoDTO.getWarningIntervalValue()))) {
+            lastWarningTimeState.update(timestamp);
+            // TODO: 进行预警信息拼接组合
             out.collect("事件[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
         }
     }
