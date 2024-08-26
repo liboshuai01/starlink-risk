@@ -21,7 +21,6 @@ import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction
 import org.apache.flink.util.CollectionUtil;
 import org.apache.flink.util.Collector;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -30,8 +29,6 @@ import java.util.*;
  */
 @Slf4j
 public class ProcessorOne implements Processor {
-
-    private RedisUtil redisUtil;
 
     /**
      * 规则信息
@@ -70,17 +67,10 @@ public class ProcessorOne implements Processor {
     }
 
     @Override
-    public void process(EventKafkaDTO eventKafkaDTO, Collector<String> out) throws Exception {
-        // TODO: 从redis中获取初始值进行计算
+    public void processElement(EventKafkaDTO eventKafkaDTO, Collector<String> out) throws Exception {
         RuleInfoDTO ruleInfoDTO = ruleInfoDTOValueState.value();
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
-        }
-        // 获取跨历史时间
-        LocalDateTime historyTimeline = DateUtil.convertStr2LocalDateTime("1970-01-01 00:00:00");
-        if (ruleInfoDTO.getCrossHistory()) {
-            String historyTimelineStr = ruleInfoDTO.getHistoryTimeline();
-            historyTimeline = DateUtil.convertStr2LocalDateTime(historyTimelineStr);
         }
         // 获取当前事件时间戳
         String timestamp = eventKafkaDTO.getTimestamp();
@@ -92,13 +82,34 @@ public class ProcessorOne implements Processor {
         }
         // 多个规则条件进行窗口值累加
         for (RuleConditionDTO ruleConditionDTO : ruleConditionList) {
-            if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
-                    && eventTime.isAfter(historyTimeline)) {
-                if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
-                    smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
+            // 划分为跨历史时间段 和 不跨历史时间段
+            if (ruleConditionDTO.getCrossHistory()) { // 跨历史时间段
+                String historyTimelineStr = ruleConditionDTO.getHistoryTimeline();
+                LocalDateTime historyTimeline = DateUtil.convertStr2LocalDateTime(historyTimelineStr);
+                // 匹配到事件时，进行事件值累加
+                if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
+                        && eventTime.isAfter(historyTimeline)) {
+                    if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
+                        // 跨历史时间段，当状态值为空时从redis获取初始值
+                        // TODO: redis key设计要根据doris查询结果进行再设计
+                        String initValue = RedisUtil.getString(
+                                ruleConditionDTO.getRuleCode() + ruleConditionDTO.getEventCode()
+                        );
+                        smallMapState.put(eventKafkaDTO.getEventCode(), Long.parseLong(initValue));
+                    }
+                    smallMapState.put(eventKafkaDTO.getEventCode(),
+                            smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
                 }
-                smallMapState.put(eventKafkaDTO.getEventCode(),
-                        smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
+            } else { // 非跨历史时间段
+                // 匹配到事件时，进行事件值累加
+                if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())) {
+                    if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
+                        // 非跨历史时间段，当状态值为空时直接初始化为0
+                        smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
+                    }
+                    smallMapState.put(eventKafkaDTO.getEventCode(),
+                            smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
+                }
             }
         }
     }
@@ -216,12 +227,6 @@ public class ProcessorOne implements Processor {
             // TODO: 进行预警信息拼接组合
             out.collect("事件[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
         }
-    }
-
-    @Override
-    public Boolean isCrossHistory() throws IOException {
-        RuleInfoDTO ruleInfoDTO = ruleInfoDTOValueState.value();
-        return ruleInfoDTO.getCrossHistory();
     }
 
     public static boolean evaluateEventResults(Map<String, Boolean> eventCodeAndWarnResult, String conditionOperator) {

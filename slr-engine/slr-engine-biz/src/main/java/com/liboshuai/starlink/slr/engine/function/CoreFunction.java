@@ -2,10 +2,10 @@ package com.liboshuai.starlink.slr.engine.function;
 
 import com.liboshuai.starlink.slr.engine.api.dto.*;
 import com.liboshuai.starlink.slr.engine.api.enums.RuleStatusEnum;
-import com.liboshuai.starlink.slr.engine.processor.Processor;
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import com.liboshuai.starlink.slr.engine.exception.BusinessException;
+import com.liboshuai.starlink.slr.engine.processor.Processor;
 import com.liboshuai.starlink.slr.engine.utils.jdbc.JdbcUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
@@ -13,7 +13,10 @@ import groovy.lang.GroovyClassLoader;
 import io.debezium.data.Envelope;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.apache.flink.api.common.state.*;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.MapState;
+import org.apache.flink.api.common.state.StateTtlConfig;
+import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction;
@@ -21,7 +24,10 @@ import org.apache.flink.util.CollectionUtil;
 import org.apache.flink.util.Collector;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -95,14 +101,14 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         for (Map.Entry<String, Processor> stringProcessorEntry : processorByRuleCodeMap.entrySet()) {
             String ruleCode = stringProcessorEntry.getKey();
             Processor processor = stringProcessorEntry.getValue();
-            if (processor.isCrossHistory() && !oldRuleListState.contains(ruleCode)) {
-                // 若需要跨历史且为新规则，则需要先将历史事件数据处理完毕
+            if (!oldRuleListState.contains(ruleCode)) {
+                // 新规则需要先将缓存的最近历史事件数据处理一遍
                 for (EventKafkaDTO historyEventKafkaDTO : recentEventListState.get()) {
-                    processor.process(historyEventKafkaDTO, out);
+                    processor.processElement(historyEventKafkaDTO, out);
                 }
             } else {
                 // 否则直接处理当前一条事件数据即可
-                processor.process(eventKafkaDTO, out);
+                processor.processElement(eventKafkaDTO, out);
             }
         }
         // 注册定时器

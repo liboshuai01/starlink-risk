@@ -23,10 +23,9 @@ public class RuleInfoDTO implements Serializable {
     private Integer ruleType;
     private String ruleName;
     private String ruleDesc;
-    private Boolean crossHistory;
-    private String historyTimeline;
     private String expireBeginTime;
     private String expireEndTime;
+    // TODO: 删除了两个字段，数据库待补充
     private String conditionOperator;
     private String warningMessage;
     private String warningIntervalValue;

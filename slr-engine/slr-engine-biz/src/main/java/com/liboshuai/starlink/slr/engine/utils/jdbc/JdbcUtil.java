@@ -1,8 +1,8 @@
 package com.liboshuai.starlink.slr.engine.utils.jdbc;
 
 import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
-import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
+import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.java.utils.ParameterTool;
 
@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @Author liboshuai

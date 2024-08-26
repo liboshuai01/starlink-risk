@@ -19,7 +19,6 @@ import java.util.Set;
  */
 public class RedisUtil {
 
-    @Getter
     private static final JedisCluster jedisCluster;
 
     // 初始化连接池

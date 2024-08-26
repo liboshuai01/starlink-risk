@@ -19,6 +19,10 @@ public class RuleConditionDTO implements Serializable {
     private String conditionCode;
     private String ruleCode;
     private String eventCode;
+    // TODO: 数据库待补充
+    private Boolean crossHistory;
+    // TODO: 数据库待补充
+    private String historyTimeline;
     private String eventThreshold;
     private String windowSizeValue;
     private String windowSizeUnit;
