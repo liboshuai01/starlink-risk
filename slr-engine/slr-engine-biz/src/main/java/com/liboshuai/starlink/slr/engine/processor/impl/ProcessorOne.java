@@ -3,6 +3,7 @@ package com.liboshuai.starlink.slr.engine.processor.impl;
 import com.liboshuai.starlink.slr.engine.api.dto.EventKafkaDTO;
 import com.liboshuai.starlink.slr.engine.api.dto.RuleConditionDTO;
 import com.liboshuai.starlink.slr.engine.api.dto.RuleInfoDTO;
+import com.liboshuai.starlink.slr.engine.api.enums.RuleConditionOperatorTypeEnum;
 import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import com.liboshuai.starlink.slr.engine.exception.BusinessException;
 import com.liboshuai.starlink.slr.engine.processor.Processor;
@@ -11,20 +12,18 @@ import com.liboshuai.starlink.slr.engine.utils.date.DateUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.apache.flink.api.common.state.ListState;
-import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.common.state.MapState;
+import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction;
 import org.apache.flink.util.CollectionUtil;
 import org.apache.flink.util.Collector;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 运算机one
@@ -40,26 +39,25 @@ public class ProcessorOne implements Processor {
     private ValueState<RuleInfoDTO> ruleInfoDTOValueState;
 
     /**
-     * smallValue
+     * smallValue（窗口步长）: key为eventCode,value为eventValue
      */
-    private ValueState<Long> smallValueState;
+    private MapState<String, Long> smallMapState;
 
     /**
-     * bigValue
+     * bigValue（窗口大小）: key为eventCode，value为一个一个步长的eventValue累加值
      */
-    private ListState<Long> bigListValue;
-
+    private MapState<String, List<Long>> bigMapState;
 
     @Override
     public void open(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) {
         ruleInfoDTOValueState = runtimeContext.getState(
                 new ValueStateDescriptor<>("ruleInfoDTOValueState", RuleInfoDTO.class)
         );
-        smallValueState = runtimeContext.getState(
-                new ValueStateDescriptor<>("smallMapState", Long.class)
+        smallMapState = runtimeContext.getMapState(
+                new MapStateDescriptor<>("smallMapState", String.class, Long.class)
         );
-        bigListValue = runtimeContext.getListState(
-                new ListStateDescriptor<>("smallValueState", Long.class)
+        bigMapState = runtimeContext.getMapState(
+                new MapStateDescriptor<>("bigMapState", Types.STRING, Types.LIST(Types.LONG))
         );
     }
 
@@ -84,23 +82,21 @@ public class ProcessorOne implements Processor {
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
             throw new BusinessException("运算机 ruleConditionList 必须非空");
         }
-        // TODO: 周期规则暂时只支持一个规则条件，后续看看能不能支持多个
-        RuleConditionDTO ruleConditionDTO = ruleConditionList.get(0);
-        String windowSizeValue = ruleConditionDTO.getWindowSizeValue();
-        String windowSizeUnit = ruleConditionDTO.getWindowSizeUnit();
-        // 根据窗口值与单位计算获取窗口毫秒值
-        int windowSize = getWindowSize(windowSizeUnit, windowSizeValue);
-        log.warn("windowSize: {}", windowSize);
-        if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
-                && eventTime.isAfter(historyTimeline)) {
-            if (smallValueState.value() == null) {
-                smallValueState.update(0L);
+        // 多个规则条件进行窗口值累加
+        for (RuleConditionDTO ruleConditionDTO : ruleConditionList) {
+            if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
+                    && eventTime.isAfter(historyTimeline)) {
+                if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
+                    smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
+                }
+                smallMapState.put(eventKafkaDTO.getEventCode(),
+                        smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
             }
-            smallValueState.update(Long.parseLong(eventKafkaDTO.getEventValue()) + smallValueState.value());
         }
     }
 
     /**
+     * TODO: 代码迁移到admin项目
      * 根据窗口值与单位计算获取窗口毫秒值
      */
     private static int getWindowSize(String windowSizeUnit, String windowSizeValue) {
@@ -147,26 +143,70 @@ public class ProcessorOne implements Processor {
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
             throw new BusinessException("运算机 ruleConditionList 必须非空");
         }
-        // TODO: 周期规则暂时只支持一个规则条件，后续看看能不能支持多个
-        RuleConditionDTO ruleConditionDTO = ruleConditionList.get(0);
-
-        bigListValue.add(smallValueState.value());
-        smallValueState.clear();
-        List<Long> tmpList = new ArrayList<>();
-        Iterator<Long> iterator = bigListValue.get().iterator();
-        while (iterator.hasNext()) {
-            tmpList.add(iterator.next());
+        // 将规则条件根据事件编号存储到map中，方便后续操作
+        Map<String, RuleConditionDTO> ruleConditionMapByEventCode = new HashMap<>();
+        for (RuleConditionDTO ruleConditionDTO : ruleConditionList) {
+            ruleConditionMapByEventCode.put(ruleConditionDTO.getEventCode(), ruleConditionDTO);
         }
-        if (tmpList.size() > Long.parseLong(ruleConditionDTO.getWindowSize())) {
-            tmpList.remove(0);
+        // 将smallMapState的值临时转移到普通的smallMap中，方便数据操作
+        Map<String, Long> smallMap = new HashMap<>();
+        Iterator<Map.Entry<String, Long>> smallIterator = smallMapState.iterator();
+        while (smallIterator.hasNext()) {
+            Map.Entry<String, Long> next = smallIterator.next();
+            smallMap.put(next.getKey(), next.getValue());
         }
-        bigListValue.update(tmpList);
-
-        long sum = tmpList.stream().mapToLong(Long::valueOf).sum();
-        String eventThreshold = ruleConditionDTO.getEventThreshold();
-        if (Long.parseLong(eventThreshold) > sum) {
-            // TODO: 预警信息生成待编写
-            out.collect("触发预警了");
+        // 将bigMapState的值临时转移到普通的bigMap中，方便数据操作
+        Map<String, List<Long>> bigMap = new HashMap<>();
+        Iterator<Map.Entry<String, List<Long>>> bigIterator = bigMapState.iterator();
+        while (bigIterator.hasNext()) {
+            Map.Entry<String, List<Long>> next = bigIterator.next();
+            bigMap.put(next.getKey(), next.getValue());
+        }
+        // 将每个事件窗口步长数据集累加的值，添加到窗口大小数据集中bigMap中
+        for (Map.Entry<String, Long> smallMapEntry : smallMap.entrySet()) {
+            String eventCode = smallMapEntry.getKey();
+            Long eventValue = smallMapEntry.getValue();
+            List<Long> oldEventValueList = bigMap.get(eventCode);
+            if (CollectionUtil.isNullOrEmpty(oldEventValueList)) {
+                oldEventValueList = new ArrayList<>();
+            }
+            oldEventValueList.add(eventValue);
+            bigMap.put(eventCode, oldEventValueList);
+        }
+        // 当前窗口步长的数据已经添加到窗口中了，清空状态
+        smallMapState.clear();
+        // 清理窗口大小之外的数据
+        for (Map.Entry<String, List<Long>> bigMapEntry : bigMap.entrySet()) {
+            String eventCode = bigMapEntry.getKey();
+            List<Long> eventValueList = bigMapEntry.getValue();
+            String windowSize = ruleConditionMapByEventCode.get(eventCode).getWindowSize();
+            if (eventValueList.size() > Long.parseLong(windowSize)) {
+                eventValueList = eventValueList.subList(eventValueList.size() - 20, eventValueList.size());
+            }
+            bigMap.put(eventCode, eventValueList);
+        }
+        // 将bigMap更新到bigMapState中
+        for (Map.Entry<String, List<Long>> bigMapEntry : bigMap.entrySet()) {
+            String eventCode = bigMapEntry.getKey();
+            List<Long> eventValueList = bigMapEntry.getValue();
+            bigMapState.put(eventCode, eventValueList);
+        }
+        // 判断是否触发规则事件阈值
+        Map<String, Boolean> eventCodeAndWarnResult = new HashMap<>();
+        for (Map.Entry<String, List<Long>> bigMapEntry : bigMap.entrySet()) {
+            String eventCode = bigMapEntry.getKey();
+            List<Long> eventValueList = bigMapEntry.getValue();
+            long eventValueSum = eventValueList.stream().mapToLong(Long::longValue).sum();
+            String eventThreshold = ruleConditionMapByEventCode.get(eventCode).getEventThreshold();
+            eventCodeAndWarnResult.put(eventCode, eventValueSum > Long.parseLong(eventThreshold));
+        }
+        String conditionOperator = ruleInfoDTO.getConditionOperator();
+        // 根据规则中事件条件表达式组合判断事件结果是否触发预警
+        boolean eventResult = evaluateEventResults(eventCodeAndWarnResult, conditionOperator);
+        if (eventResult) {
+            // TODO: 根据规则中的预警信息拼接
+            // TODO: 进行预警信息发送频率的控制
+            out.collect("事件[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
         }
     }
 
@@ -174,5 +214,31 @@ public class ProcessorOne implements Processor {
     public Boolean isCrossHistory() throws IOException {
         RuleInfoDTO ruleInfoDTO = ruleInfoDTOValueState.value();
         return ruleInfoDTO.getCrossHistory();
+    }
+
+    public static boolean evaluateEventResults(Map<String, Boolean> eventCodeAndWarnResult, String conditionOperator) {
+        // 初始化结果变量
+        boolean result = conditionOperator.equals(RuleConditionOperatorTypeEnum.AND.getCode());
+
+        // 遍历 Map
+        for (Boolean eventResult : eventCodeAndWarnResult.values()) {
+            if (conditionOperator.equals(RuleConditionOperatorTypeEnum.AND.getCode())) {
+                // 对于 AND，只有当所有结果都为 true 时，结果才为 true
+                result = eventResult;
+                // 提前结束循环，如果结果已经为 false
+                if (!result) {
+                    break;
+                }
+            } else if (conditionOperator.equals(RuleConditionOperatorTypeEnum.OR.getCode())) {
+                // 对于 OR，只要有一个结果为 true，结果就为 true
+                result = eventResult;
+                // 提前结束循环，如果结果已经为 true
+                if (result) {
+                    break;
+                }
+            }
+        }
+
+        return result;
     }
 }
