@@ -1,5 +1,6 @@
 package com.liboshuai.starlink.slr.admin.dao.mysql.risk;
 
+import com.liboshuai.starlink.slr.admin.pojo.entity.risk.RuleInfoEntity;
 import com.liboshuai.starlink.slr.framework.mybatis.core.mapper.BaseMapperX;
 import com.liboshuai.starlink.slr.framework.mybatis.core.query.LambdaQueryWrapperX;
 import org.apache.ibatis.annotations.Mapper;

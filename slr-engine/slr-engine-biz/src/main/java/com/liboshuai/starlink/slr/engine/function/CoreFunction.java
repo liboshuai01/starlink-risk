@@ -22,6 +22,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction;
 import org.apache.flink.util.CollectionUtil;
 import org.apache.flink.util.Collector;
+import org.apache.flink.util.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -178,19 +179,13 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
      * 构造运算机对象
      */
     private Processor buildProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
-            throws InstantiationException {
-        RuleModelDTO ruleModelDTO = ruleInfoDTO.getRuleModelGroovyCode();
-        if (Objects.isNull(ruleModelDTO)) {
-            throw new BusinessException("运算机模型 ruleModelDTO 必须非空");
+            throws InstantiationException, IllegalAccessException {
+        String ruleModelGroovyCode = ruleInfoDTO.getRuleModelGroovyCode();
+        if (StringUtils.isNullOrWhitespaceOnly(ruleModelGroovyCode)) {
+            throw new BusinessException("运算机模型代码 ruleModelGroovyCode 必须非空");
         }
-        String ruleModel = ruleModelDTO.getGroovy();
-        Class aClass = groovyClassLoader.parseClass(ruleModel);
-        Processor processor;
-        try {
-            processor = (Processor) aClass.newInstance();
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        Class aClass = groovyClassLoader.parseClass(ruleModelGroovyCode);
+        Processor processor = (Processor) aClass.newInstance();
         processor.open(runtimeContext, ruleInfoDTO);
         return processor;
     }
