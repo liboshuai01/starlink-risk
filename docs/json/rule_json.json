@@ -16,7 +16,7 @@
       "conditionType": 1,
       "beginTime": "1970-01-01 00:00:00",
       "endTime": "1970-01-01 00:00:00",
-      "windowSize": 1200000,
+      "windowSize": 300000,
       "isCrossHistory": true,
       "crossHistoryTimeline": "2024-08-26 16:41:40",
       "eventInfo": {
@@ -45,7 +45,7 @@
       "conditionType": 1,
       "beginTime": "1970-01-01 00:00:00",
       "endTime": "1970-01-01 00:00:00",
-      "windowSize": 1800000,
+      "windowSize": 600000,
       "isCrossHistory": true,
       "crossHistoryTimeline": "2024-08-26 16:41:40",
       "eventInfo": {

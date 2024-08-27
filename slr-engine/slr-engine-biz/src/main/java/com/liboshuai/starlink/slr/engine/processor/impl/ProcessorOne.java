@@ -76,6 +76,7 @@ public class ProcessorOne implements Processor {
 
     @Override
     public void processElement(EventKafkaDTO eventKafkaDTO, Collector<String> out) throws Exception {
+        // TODO: 调试使用，待删除
         logSmallMapState(smallMapState, "processElement","after");
         logBigMapState(bigMapState, "processElement","after");
         log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
@@ -125,6 +126,7 @@ public class ProcessorOne implements Processor {
                 }
             }
         }
+        // TODO: 调试使用，待删除
         logSmallMapState(smallMapState, "processElement","before");
         logBigMapState(bigMapState, "processElement","before");
     }
@@ -135,6 +137,7 @@ public class ProcessorOne implements Processor {
         if (Objects.isNull(ruleInfo)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
+        // TODO: 调试使用，待删除
         logSmallMapState(smallMapState, "onTimer", "before");
         logBigMapState(bigMapState, "onTimer","before");
         // 获取规则条件
@@ -163,6 +166,7 @@ public class ProcessorOne implements Processor {
             log.warn("用户[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
             out.collect("事件[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
         }
+        // TODO: 调试使用，待删除
         logSmallMapState(smallMapState, "onTimer","after");
         logBigMapState(bigMapState, "onTimer","after");
     }
@@ -218,6 +222,7 @@ public class ProcessorOne implements Processor {
                     iterator.remove();
                 }
             }
+            bigMapState.put(eventCode, timestampAndEventValueMap);
         }
     }
 
