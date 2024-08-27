@@ -36,11 +36,6 @@ public class ProcessorOne implements Processor {
     private static final Logger log = LoggerFactory.getLogger(ProcessorOne.class);
 
     /**
-     * 规则信息
-     */
-    private RuleInfoDTO ruleInfo;
-
-    /**
      * smallValue（窗口步长）: key为eventCode,value为eventValue
      */
     private MapState<String, Long> smallMapState;
@@ -62,7 +57,6 @@ public class ProcessorOne implements Processor {
     public void open(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) throws IOException {
         log.warn("调用ProcessorOne对象的open方法, ruleInfoDTO={}", ruleInfoDTO);
         String ruleCode = ruleInfoDTO.getRuleCode();
-        ruleInfo = ruleInfoDTO;
         smallMapState = runtimeContext.getMapState(
                 new MapStateDescriptor<>("smallMapState_" + ruleCode, String.class, Long.class)
         );
@@ -75,18 +69,24 @@ public class ProcessorOne implements Processor {
     }
 
     @Override
-    public void processElement(EventKafkaDTO eventKafkaDTO, Collector<String> out) throws Exception {
+    public void processElement(EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception {
         // TODO: 调试使用，待删除
         log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
         logSmallMapState(smallMapState, "processElement","after");
         logBigMapState(bigMapState, "processElement","after");
-        if (Objects.isNull(ruleInfo)) {
+        if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
+        }
+        String eventKafkaDTOChannel = eventKafkaDTO.getChannel();
+        String ruleInfoChannel = ruleInfoDTO.getChannel();
+        if (!Objects.equals(eventKafkaDTOChannel, ruleInfoChannel)) {
+            log.warn("ProcessorOne-processElement 事件数据与规则数据的渠道不匹配，跳过");
+            return;
         }
         // 获取当前事件时间戳
         LocalDateTime eventTime = DateUtil.convertTimestamp2LocalDateTime(System.currentTimeMillis());
         // 获取规则条件
-        List<RuleConditionDTO> ruleConditionList = ruleInfo.getRuleConditionGroup();
+        List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
             throw new BusinessException("运算机 ruleConditionList 必须非空");
         }
@@ -131,16 +131,16 @@ public class ProcessorOne implements Processor {
     }
 
     @Override
-    public void onTimer(long timestamp, Collector<String> out) throws Exception {
+    public void onTimer(long timestamp, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception {
         log.warn("调用ProcessorOne对象的onTimer方法, timestamp={}, out={}", timestamp, out);
-        if (Objects.isNull(ruleInfo)) {
+        if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
         // TODO: 调试使用，待删除
         logSmallMapState(smallMapState, "onTimer", "before");
         logBigMapState(bigMapState, "onTimer","before");
         // 获取规则条件
-        List<RuleConditionDTO> ruleConditionList = ruleInfo.getRuleConditionGroup();
+        List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
             throw new BusinessException("运算机 ruleConditionList 必须非空");
         }
@@ -154,12 +154,12 @@ public class ProcessorOne implements Processor {
         // 清理窗口大小之外的数据
         cleanupWindowData(timestamp, ruleConditionMapByEventCode);
         // 判断是否触发规则事件阈值
-        boolean eventResult = evaluateEventThresholds(ruleConditionMapByEventCode);
+        boolean eventResult = evaluateEventThresholds(ruleConditionMapByEventCode, ruleInfoDTO);
         // 根据规则中事件条件表达式组合判断事件结果 与预警频率 判断否是触发预警
         if (lastWarningTimeState.value() == null) {
             lastWarningTimeState.update(0L);
         }
-        if (eventResult && (timestamp - lastWarningTimeState.value() >= ruleInfo.getWarnInterval())) {
+        if (eventResult && (timestamp - lastWarningTimeState.value() >= ruleInfoDTO.getWarnInterval())) {
             lastWarningTimeState.update(timestamp);
             // TODO: 进行预警信息拼接组合
             log.warn("用户[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
@@ -173,7 +173,7 @@ public class ProcessorOne implements Processor {
     /**
      * 判断是否触发规则事件阈值
      */
-    private boolean evaluateEventThresholds(Map<String, RuleConditionDTO> ruleConditionMapByEventCode) throws Exception {
+    private boolean evaluateEventThresholds(Map<String, RuleConditionDTO> ruleConditionMapByEventCode, RuleInfoDTO ruleInfoDTO) throws Exception {
         Map<String, Boolean> eventCodeAndWarnResult = new HashMap<>();
         for (Map.Entry<String, Map<Long, Long>> bigMapEntry : bigMapState.entries()) {
             String eventCode = bigMapEntry.getKey();
@@ -182,7 +182,7 @@ public class ProcessorOne implements Processor {
             Long eventThreshold = ruleConditionMapByEventCode.get(eventCode).getEventThreshold();
             eventCodeAndWarnResult.put(eventCode, eventValueSum > eventThreshold);
         }
-        boolean eventResult = evaluateEventResults(eventCodeAndWarnResult, ruleInfo.getCombinedConditionOperator());
+        boolean eventResult = evaluateEventResults(eventCodeAndWarnResult, ruleInfoDTO.getCombinedConditionOperator());
         return eventResult;
     }
 

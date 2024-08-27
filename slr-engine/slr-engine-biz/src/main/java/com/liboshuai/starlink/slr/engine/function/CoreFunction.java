@@ -14,9 +14,7 @@ import groovy.lang.GroovyClassLoader;
 import io.debezium.data.Envelope;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.apache.flink.api.common.state.ListState;
-import org.apache.flink.api.common.state.MapState;
-import org.apache.flink.api.common.state.StateTtlConfig;
+import org.apache.flink.api.common.state.*;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.KeyedBroadcastProcessFunction;
@@ -28,6 +26,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.liboshuai.starlink.slr.engine.common.StateDescContainer.*;
 
@@ -62,7 +61,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     /**
      * 在线规则数量
      */
-    private Long onlineRuleCount;
+    private AtomicLong onlineRuleCount;
 
     /**
      * 银行数据
@@ -99,6 +98,8 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         waitForInitAllProcessor();
         // 将事件放入缓存列表中
         recentEventListState.add(eventKafkaDTO);
+        // 从广播流中获取规则信息
+        ReadOnlyBroadcastState<String, RuleInfoDTO> broadcastState = ctx.getBroadcastState(BROADCAST_RULE_MAP_STATE_DESC);
         // 数据遍历经过每个规则运算机
         for (Map.Entry<String, Processor> stringProcessorEntry : processorByRuleCodeMap.entrySet()) {
             String ruleCode = stringProcessorEntry.getKey();
@@ -106,12 +107,12 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             if (!oldRuleListState.contains(ruleCode)) {
                 // 新规则需要先将缓存的最近历史事件数据处理一遍
                 for (EventKafkaDTO historyEventKafkaDTO : recentEventListState.get()) {
-                    processor.processElement(historyEventKafkaDTO, out);
+                    processor.processElement(historyEventKafkaDTO, broadcastState.get(ruleCode), out);
                 }
                 oldRuleListState.put(ruleCode, null);
             } else {
                 // 否则直接处理当前一条事件数据即可
-                processor.processElement(eventKafkaDTO, out);
+                processor.processElement(eventKafkaDTO, broadcastState.get(ruleCode), out);
             }
         }
         // 注册定时器（窗口大小1分钟）
@@ -138,17 +139,20 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("Mysql Cdc 广播流 ruleInfoDTO 必须非空");
         }
+        BroadcastState<String, RuleInfoDTO> broadcastState = ctx.getBroadcastState(BROADCAST_RULE_MAP_STATE_DESC);
         if ((Objects.equals(op, Envelope.Operation.READ.code()) || Objects.equals(op, Envelope.Operation.CREATE.code())
                 || Objects.equals(op, Envelope.Operation.UPDATE.code()))
                 && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.ENABLE.getCode())) {
             // 在读取、创建、更新，且状态为上线时，则上线一个运算机
             Processor processor = mockProcessor(getRuntimeContext(), ruleInfoDTO);
             processorByRuleCodeMap.put(ruleCode, processor);
+            broadcastState.put(ruleCode, ruleInfoDTO);
             log.warn("上线或更新一个运算机，规则编号为:{}", ruleCode);
         } else if (Objects.equals(op, Envelope.Operation.UPDATE.code())
                 && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.DISABLE.getCode())) {
             // 在更新，且状态为下线时，则下线一个运算机
             processorByRuleCodeMap.remove(ruleCode);
+            broadcastState.remove(ruleCode);
             log.warn("下线一个运算机，规则编号为:{}", ruleCode);
         }
         log.warn("运算机map, processorByRuleCodeMap: {}", processorByRuleCodeMap);
@@ -159,12 +163,14 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                         KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx,
                         Collector<String> out) throws Exception {
         log.warn("调用一次onTimer方法, timestamp: {}, out: {}", timestamp, out);
+        // 从广播流中获取规则信息
+        ReadOnlyBroadcastState<String, RuleInfoDTO> broadcastState = ctx.getBroadcastState(BROADCAST_RULE_MAP_STATE_DESC);
         // 数据遍历经过每个规则运算机
         for (Map.Entry<String, Processor> stringProcessorEntry : processorByRuleCodeMap.entrySet()) {
             String ruleCode = stringProcessorEntry.getKey();
             Processor processor = stringProcessorEntry.getValue();
             // 调用定时器
-            processor.onTimer(timestamp, out);
+            processor.onTimer(timestamp, broadcastState.get(ruleCode), out);
         }
     }
 
@@ -196,7 +202,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     /**
      * 查询上线的规则数量
      */
-    private Long queryOnlineRuleCount() throws IOException {
+    private AtomicLong queryOnlineRuleCount() {
         // 获取规则表名
         String tableName = ParameterUtil.getParameters().get(ParameterConstants.MYSQL_TABLE_RULE_COUNT);
         // 查询规则数据
@@ -208,7 +214,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             throw new BusinessException("Mysql Jdbc 查询上线的规则数量为空！");
         }
         log.warn("Mysql Jdbc 查询上线的规则数量: {}", ruleOnlineCountDTO.getOnlineCount());
-        return ruleOnlineCountDTO.getOnlineCount();
+        return new AtomicLong(ruleOnlineCountDTO.getOnlineCount());
     }
 
     /**
@@ -239,7 +245,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         long currentOnlineRuleCount = getCurrentOnlineRuleCount();
         while (true) {
             log.warn("事件处理流-onlineRuleCount:{}, currentOnlineRuleCount: {}", onlineRuleCount, currentOnlineRuleCount);
-            if (onlineRuleCount == currentOnlineRuleCount) {
+            if (onlineRuleCount.get() == currentOnlineRuleCount) {
                 break;
             }
             TimeUnit.SECONDS.sleep(1);

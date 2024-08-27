@@ -1,6 +1,7 @@
 package com.liboshuai.starlink.slr.engine.common;
 
 import com.liboshuai.starlink.slr.engine.api.dto.EventKafkaDTO;
+import com.liboshuai.starlink.slr.engine.api.dto.RuleInfoDTO;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 
@@ -13,8 +14,8 @@ public class StateDescContainer {
     /**
      * 规则广播流状态定义
      */
-    public static MapStateDescriptor<String, String> BROADCAST_RULE_MAP_STATE_DESC =
-            new MapStateDescriptor<>("broadcastRuleMapState", String.class, String.class);
+    public static MapStateDescriptor<String, RuleInfoDTO> BROADCAST_RULE_MAP_STATE_DESC =
+            new MapStateDescriptor<>("broadcastRuleMapState", String.class, RuleInfoDTO.class);
 
     /**
      * 最近事件数据缓存状态定义

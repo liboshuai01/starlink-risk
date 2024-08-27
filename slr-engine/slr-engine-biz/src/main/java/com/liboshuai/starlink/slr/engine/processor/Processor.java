@@ -20,10 +20,10 @@ public interface Processor {
     /**
      * 处理单条数据
      */
-    void processElement(EventKafkaDTO eventKafkaDTO, Collector<String> out) throws Exception;
+    void processElement(EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception;
 
     /**
      * 定时器
      */
-    void onTimer(long timestamp, Collector<String> out) throws Exception;
+    void onTimer(long timestamp, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception;
 }
