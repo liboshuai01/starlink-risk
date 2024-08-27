@@ -2,7 +2,6 @@ package com.liboshuai.starlink.slr.engine;
 
 
 import com.liboshuai.starlink.slr.engine.api.dto.EventKafkaDTO;
-import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.common.StateDescContainer;
 import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import com.liboshuai.starlink.slr.engine.function.CoreFunction;
@@ -19,9 +18,6 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -61,17 +57,17 @@ public class EngineApplication {
     /**
      * 构建水位线
      */
-    private static WatermarkStrategy<EventKafkaDTO> buildWatermarkStrategy(ParameterTool parameterTool) {
-        return WatermarkStrategy
-                //水印生成器: 实现一个延迟10秒的固定延迟水印
-                .<EventKafkaDTO>forBoundedOutOfOrderness(Duration.ofMillis(
-                        TimeUnit.SECONDS.toMillis(parameterTool.getInt(
-                                ParameterConstants.FLINK_MAXOUTOFORDERNESS
-                        ))
-                ))
-                //时间戳生成器：提取事件流的event_time字段
-                .withTimestampAssigner((eventKafkaDTO, eventKafkaTimestamp) -> Long.parseLong(eventKafkaDTO.getTimestamp()))
-                // 空闲检查时间，防止水位线停止推进
-                .withIdleness(Duration.ofSeconds(5));
-    }
+//    private static WatermarkStrategy<EventKafkaDTO> buildWatermarkStrategy(ParameterTool parameterTool) {
+//        return WatermarkStrategy
+//                //水印生成器: 实现一个延迟10秒的固定延迟水印
+//                .<EventKafkaDTO>forBoundedOutOfOrderness(Duration.ofMillis(
+//                        TimeUnit.SECONDS.toMillis(parameterTool.getInt(
+//                                ParameterConstants.FLINK_MAXOUTOFORDERNESS
+//                        ))
+//                ))
+//                //时间戳生成器：提取事件流的event_time字段
+//                .withTimestampAssigner((eventKafkaDTO, eventKafkaTimestamp) -> Long.parseLong(eventKafkaDTO.getTimestamp()))
+//                // 空闲检查时间，防止水位线停止推进
+//                .withIdleness(Duration.ofSeconds(5));
+//    }
 }

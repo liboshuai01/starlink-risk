@@ -151,6 +151,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             processorByRuleCodeMap.remove(ruleCode);
             log.warn("下线一个运算机，规则编号为:{}", ruleCode);
         }
+        log.warn("运算机map, processorByRuleCodeMap: {}", processorByRuleCodeMap);
     }
 
     @Override
@@ -242,7 +243,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                 break;
             }
             TimeUnit.SECONDS.sleep(1);
-            queryOnlineRuleCount();
+            onlineRuleCount = queryOnlineRuleCount();
             currentOnlineRuleCount = getCurrentOnlineRuleCount();
         }
     }

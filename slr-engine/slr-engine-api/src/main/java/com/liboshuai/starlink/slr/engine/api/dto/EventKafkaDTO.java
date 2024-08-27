@@ -31,11 +31,6 @@ public class EventKafkaDTO implements Serializable {
     private String channel;
 
     /**
-     * 时间戳（毫秒级别13位）
-     */
-    private String timestamp;
-
-    /**
      * key编号
      */
     private String keyCode;

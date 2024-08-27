@@ -77,15 +77,14 @@ public class ProcessorOne implements Processor {
     @Override
     public void processElement(EventKafkaDTO eventKafkaDTO, Collector<String> out) throws Exception {
         // TODO: 调试使用，待删除
+        log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
         logSmallMapState(smallMapState, "processElement","after");
         logBigMapState(bigMapState, "processElement","after");
-        log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
         if (Objects.isNull(ruleInfo)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
         // 获取当前事件时间戳
-        String timestamp = eventKafkaDTO.getTimestamp();
-        LocalDateTime eventTime = DateUtil.convertTimestamp2LocalDateTime(Long.parseLong(timestamp));
+        LocalDateTime eventTime = DateUtil.convertTimestamp2LocalDateTime(System.currentTimeMillis());
         // 获取规则条件
         List<RuleConditionDTO> ruleConditionList = ruleInfo.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
@@ -253,6 +252,12 @@ public class ProcessorOne implements Processor {
      * @return 根据条件操作符计算后的最终结果（true 或 false）
      */
     public static boolean evaluateEventResults(Map<String, Boolean> eventCodeAndWarnResult, Integer conditionOperator) {
+        if (CollectionUtil.isNullOrEmpty(eventCodeAndWarnResult)) {
+            return false;
+        }
+        if (CollectionUtil.isNullOrEmpty(eventCodeAndWarnResult.values())) {
+            return false;
+        }
         // 初始化结果变量，根据条件操作符判断初始值
         boolean result = conditionOperator.equals(RuleConditionOperatorTypeEnum.AND.getCode());
 
