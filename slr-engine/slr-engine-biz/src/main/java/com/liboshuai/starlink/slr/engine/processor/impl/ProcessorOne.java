@@ -13,10 +13,7 @@ import com.liboshuai.starlink.slr.engine.utils.date.DateUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.apache.flink.api.common.state.MapState;
-import org.apache.flink.api.common.state.MapStateDescriptor;
-import org.apache.flink.api.common.state.ValueState;
-import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.common.state.*;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.util.CollectionUtil;
 import org.apache.flink.util.Collector;
@@ -41,6 +38,11 @@ public class ProcessorOne implements Processor {
     private MapState<String, Long> smallMapState;
 
     /**
+     * 记录对应eventCode是否已经初始化过
+     */
+    private MapState<String, Object> smallInitMapState;
+
+    /**
      * bigValue（窗口大小）: key为eventCode，小map的key为时间戳，小map的value为一个一个步长的eventValue累加值
      */
     private MapState<String, Map<Long, Long>> bigMapState;
@@ -59,6 +61,9 @@ public class ProcessorOne implements Processor {
         String ruleCode = ruleInfoDTO.getRuleCode();
         smallMapState = runtimeContext.getMapState(
                 new MapStateDescriptor<>("smallMapState_" + ruleCode, String.class, Long.class)
+        );
+        smallInitMapState = runtimeContext.getMapState(
+                new MapStateDescriptor<>("smallInitMapState" + ruleCode, String.class, Object.class)
         );
         bigMapState = runtimeContext.getMapState(
                 new MapStateDescriptor<>("bigMapState_" + ruleCode, Types.STRING, Types.MAP(Types.LONG, Types.LONG))
@@ -83,6 +88,10 @@ public class ProcessorOne implements Processor {
             log.warn("ProcessorOne-processElement 事件数据与规则数据的渠道不匹配，跳过");
             return;
         }
+        // 状态值防空
+        if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
+            smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
+        }
         // 获取当前事件时间戳
         LocalDateTime eventTime = DateUtil.convertTimestamp2LocalDateTime(System.currentTimeMillis());
         // 获取规则条件
@@ -99,8 +108,8 @@ public class ProcessorOne implements Processor {
                 if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
                         && eventTime.isAfter(crossHistoryTimeline)) {
                     // FIXME: 解决每次onTimer清除smallMapState后重复获取初始值的问题
-                    if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
-                        // 跨历史时间段，当状态值为空时从redis获取初始值
+                    if (!smallInitMapState.contains(eventKafkaDTO.getEventCode())) {
+                        // 如果为跨历史时间段的，且还没有初始化，则需要从redis中获取初始值
                         String key = RedisKeyConstants.DORIS_HISTORY_VALUE
                                 + GlobalConstants.REDIS_KEY_SEPARATOR + ruleConditionDTO.getRuleCode()
                                 + GlobalConstants.REDIS_KEY_SEPARATOR + ruleConditionDTO.getEventCode();
@@ -110,6 +119,7 @@ public class ProcessorOne implements Processor {
                             throw new BusinessException(StringUtil.format("从redis获取初始值必须非空, key:{}, hashKey: {}", key, keyCode));
                         }
                         smallMapState.put(eventKafkaDTO.getEventCode(), Long.parseLong(initValue));
+                        smallInitMapState.put(eventKafkaDTO.getEventCode(), null);
                     }
                     smallMapState.put(eventKafkaDTO.getEventCode(),
                             smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
@@ -117,10 +127,6 @@ public class ProcessorOne implements Processor {
             } else { // 非跨历史时间段
                 // 匹配到事件时，进行事件值累加
                 if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())) {
-                    if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
-                        // 非跨历史时间段，当状态值为空时直接初始化为0
-                        smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
-                    }
                     smallMapState.put(eventKafkaDTO.getEventCode(),
                             smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
                 }
