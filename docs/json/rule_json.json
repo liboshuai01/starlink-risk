@@ -6,7 +6,7 @@
   "ruleDesc": "ruleDesc01",
   "combinedConditionOperator": 0,
   "warnMessage": "高频抽奖触发",
-  "warnInterval": 300000,
+  "warnInterval": 180000,
   "status": 1,
   "ruleConditionGroup": [
     {

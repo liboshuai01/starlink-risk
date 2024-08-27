@@ -6,6 +6,7 @@ import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import com.liboshuai.starlink.slr.engine.exception.BusinessException;
 import com.liboshuai.starlink.slr.engine.processor.Processor;
+import com.liboshuai.starlink.slr.engine.processor.impl.ProcessorOne;
 import com.liboshuai.starlink.slr.engine.utils.jdbc.JdbcUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
@@ -69,7 +70,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     private Map<String, String> bankMapState;
 
     /**
-     * 注意千万不要在open方法中对状态进行赋值操作，否则进行的赋值，在processElement等方法中并不能获取到
+     * 注意千万不要在open方法中对状态进行赋值操作，因为在processElement等方法中并不能获取到
      */
     @Override
     public void open(Configuration parameters) throws Exception {
@@ -107,42 +108,17 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                 for (EventKafkaDTO historyEventKafkaDTO : recentEventListState.get()) {
                     processor.processElement(historyEventKafkaDTO, out);
                 }
+                oldRuleListState.put(ruleCode, null);
             } else {
                 // 否则直接处理当前一条事件数据即可
                 processor.processElement(eventKafkaDTO, out);
             }
         }
-        // 注册定时器
-        // 计算下一分钟的时间戳（整分钟）
-        String timestamp = eventKafkaDTO.getTimestamp();
-        // TODO: 需要确定此计算方式是否正确，还是阿里版本的正确
-        long fireTime = Long.parseLong(timestamp) - Long.parseLong(timestamp) % 60000 + 60000;
-        // 注册一个定时器，指定时间到达时触发onTimer方法
+        // 注册定时器（窗口大小1分钟）
+        // long fireTime = Long.parseLong(timestamp) - Long.parseLong(timestamp) % 60000 + 60000; （简化写法）
+        long fireTime = getWindowStartWithOffset(ctx.timestamp(), 0, 60 * 1000) + 60 * 1000;
+        log.warn("ctx.timestamp(): {}, fireTime: {}", ctx.timestamp(), fireTime);
         ctx.timerService().registerProcessingTimeTimer(fireTime);
-    }
-
-    /**
-     * 等待所有运算机初始化完成
-     */
-    private void waitForInitAllProcessor() throws IOException, InterruptedException {
-        long currentOnlineRuleCount = getCurrentOnlineRuleCount();
-        while (true) {
-            log.warn("事件处理流-onlineRuleCount:{}, currentOnlineRuleCount: {}", onlineRuleCount, currentOnlineRuleCount);
-            if (onlineRuleCount == currentOnlineRuleCount) {
-                break;
-            }
-            TimeUnit.SECONDS.sleep(1);
-            queryOnlineRuleCount();
-            currentOnlineRuleCount = getCurrentOnlineRuleCount();
-        }
-    }
-
-    /**
-     * 获取当前在线规则的数量
-     */
-    private long getCurrentOnlineRuleCount() {
-        Set<String> ruleCodeCount = processorByRuleCodeMap.keySet();
-        return ruleCodeCount.size();
     }
 
     @Override
@@ -166,7 +142,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                 || Objects.equals(op, Envelope.Operation.UPDATE.code()))
                 && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.ENABLE.getCode())) {
             // 在读取、创建、更新，且状态为上线时，则上线一个运算机
-            Processor processor = buildProcessor(getRuntimeContext(), ruleInfoDTO);
+            Processor processor = mockProcessor(getRuntimeContext(), ruleInfoDTO);
             processorByRuleCodeMap.put(ruleCode, processor);
             log.warn("上线或更新一个运算机，规则编号为:{}", ruleCode);
         } else if (Objects.equals(op, Envelope.Operation.UPDATE.code())
@@ -174,6 +150,20 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             // 在更新，且状态为下线时，则下线一个运算机
             processorByRuleCodeMap.remove(ruleCode);
             log.warn("下线一个运算机，规则编号为:{}", ruleCode);
+        }
+    }
+
+    @Override
+    public void onTimer(long timestamp,
+                        KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx,
+                        Collector<String> out) throws Exception {
+        log.warn("调用一次onTimer方法, timestamp: {}, out: {}", timestamp, out);
+        // 数据遍历经过每个规则运算机
+        for (Map.Entry<String, Processor> stringProcessorEntry : processorByRuleCodeMap.entrySet()) {
+            String ruleCode = stringProcessorEntry.getKey();
+            Processor processor = stringProcessorEntry.getValue();
+            // 调用定时器
+            processor.onTimer(timestamp, out);
         }
     }
 
@@ -188,6 +178,16 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         }
         Class aClass = groovyClassLoader.parseClass(ruleModelGroovyCode);
         Processor processor = (Processor) aClass.newInstance();
+        processor.open(runtimeContext, ruleInfoDTO);
+        return processor;
+    }
+
+    /**
+     * mock运算机对象
+     */
+    private Processor mockProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
+            throws InstantiationException, IllegalAccessException, IOException {
+        Processor processor = new ProcessorOne();
         processor.open(runtimeContext, ruleInfoDTO);
         return processor;
     }
@@ -231,17 +231,37 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         return bankMap;
     }
 
-    @Override
-    public void onTimer(long timestamp,
-                        KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx,
-                        Collector<String> out) throws Exception {
-        log.warn("调用一次onTimer方法, timestamp: {}, out: {}", timestamp, out);
-        // 数据遍历经过每个规则运算机
-        for (Map.Entry<String, Processor> stringProcessorEntry : processorByRuleCodeMap.entrySet()) {
-            String ruleCode = stringProcessorEntry.getKey();
-            Processor processor = stringProcessorEntry.getValue();
-            // 调用定时器
-            processor.onTimer(timestamp, out);
+    /**
+     * 等待所有运算机初始化完成
+     */
+    private void waitForInitAllProcessor() throws IOException, InterruptedException {
+        long currentOnlineRuleCount = getCurrentOnlineRuleCount();
+        while (true) {
+            log.warn("事件处理流-onlineRuleCount:{}, currentOnlineRuleCount: {}", onlineRuleCount, currentOnlineRuleCount);
+            if (onlineRuleCount == currentOnlineRuleCount) {
+                break;
+            }
+            TimeUnit.SECONDS.sleep(1);
+            queryOnlineRuleCount();
+            currentOnlineRuleCount = getCurrentOnlineRuleCount();
+        }
+    }
+
+    /**
+     * 获取当前在线规则的数量
+     */
+    private long getCurrentOnlineRuleCount() {
+        Set<String> ruleCodeCount = processorByRuleCodeMap.keySet();
+        return ruleCodeCount.size();
+    }
+
+    private long getWindowStartWithOffset(long timestamp, long offset, long windowSize) {
+        final long remainder = (timestamp - offset) % windowSize;
+        // handle both positive and negative cases
+        if (remainder < 0) {
+            return timestamp - (remainder + windowSize);
+        } else {
+            return timestamp - remainder;
         }
     }
 }

@@ -46,7 +46,7 @@ public class EngineApplication {
         // 获取业务数据流
         KeyedStream<EventKafkaDTO, String> eventKafkaDTOStringKeyedStream = KafkaUtil.read(env, parameterTool) // 读取数据
                 .map(s -> JsonUtil.parseObject(s, EventKafkaDTO.class)) // 转换string为eventKafkaDTO对象
-                .assignTimestampsAndWatermarks(buildWatermarkStrategy(parameterTool)) // 定义水位线
+                .assignTimestampsAndWatermarks(WatermarkStrategy.noWatermarks()) // 使用处理时间
                 .uid("register-watermark")
                 .keyBy(EventKafkaDTO::getKeyCode);// keyBy分组
 

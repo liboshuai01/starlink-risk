@@ -8,5 +8,5 @@ public interface KafkaTopicConstants {
     /**
      * 上送业务平台事件日志topic
      */
-    String SLR_EVENT = "slr_event";
+    String SLR_EVENT = "slr_warn";
 }

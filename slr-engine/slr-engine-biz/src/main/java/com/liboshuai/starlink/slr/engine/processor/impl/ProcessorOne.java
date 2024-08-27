@@ -10,6 +10,7 @@ import com.liboshuai.starlink.slr.engine.exception.BusinessException;
 import com.liboshuai.starlink.slr.engine.processor.Processor;
 import com.liboshuai.starlink.slr.engine.utils.data.RedisUtil;
 import com.liboshuai.starlink.slr.engine.utils.date.DateUtil;
+import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.state.MapState;
@@ -45,9 +46,9 @@ public class ProcessorOne implements Processor {
     private MapState<String, Long> smallMapState;
 
     /**
-     * bigValue（窗口大小）: key为eventCode，value为一个一个步长的eventValue累加值
+     * bigValue（窗口大小）: key为eventCode，小map的key为时间戳，小map的value为一个一个步长的eventValue累加值
      */
-    private MapState<String, List<Long>> bigMapState;
+    private MapState<String, Map<Long, Long>> bigMapState;
 
     /**
      * 最近一次预警时间
@@ -66,7 +67,7 @@ public class ProcessorOne implements Processor {
                 new MapStateDescriptor<>("smallMapState_" + ruleCode, String.class, Long.class)
         );
         bigMapState = runtimeContext.getMapState(
-                new MapStateDescriptor<>("bigMapState_" + ruleCode, Types.STRING, Types.LIST(Types.LONG))
+                new MapStateDescriptor<>("bigMapState_" + ruleCode, Types.STRING, Types.MAP(Types.LONG, Types.LONG))
         );
         lastWarningTimeState = runtimeContext.getState(
                 new ValueStateDescriptor<>("lastWarningTimeState_" + ruleCode, Long.class)
@@ -75,6 +76,8 @@ public class ProcessorOne implements Processor {
 
     @Override
     public void processElement(EventKafkaDTO eventKafkaDTO, Collector<String> out) throws Exception {
+        logSmallMapState(smallMapState, "processElement","after");
+        logBigMapState(bigMapState, "processElement","after");
         log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
         if (Objects.isNull(ruleInfo)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
@@ -122,6 +125,8 @@ public class ProcessorOne implements Processor {
                 }
             }
         }
+        logSmallMapState(smallMapState, "processElement","before");
+        logBigMapState(bigMapState, "processElement","before");
     }
 
     @Override
@@ -130,6 +135,8 @@ public class ProcessorOne implements Processor {
         if (Objects.isNull(ruleInfo)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
+        logSmallMapState(smallMapState, "onTimer", "before");
+        logBigMapState(bigMapState, "onTimer","before");
         // 获取规则条件
         List<RuleConditionDTO> ruleConditionList = ruleInfo.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
@@ -140,73 +147,111 @@ public class ProcessorOne implements Processor {
         for (RuleConditionDTO ruleConditionDTO : ruleConditionList) {
             ruleConditionMapByEventCode.put(ruleConditionDTO.getEventCode(), ruleConditionDTO);
         }
-        // 将smallMapState的值临时转移到普通的smallMap中，方便数据操作
-        Map<String, Long> smallMap = new HashMap<>();
-        Iterator<Map.Entry<String, Long>> smallIterator = smallMapState.iterator();
-        while (smallIterator.hasNext()) {
-            Map.Entry<String, Long> next = smallIterator.next();
-            smallMap.put(next.getKey(), next.getValue());
-        }
-        // 将bigMapState的值临时转移到普通的bigMap中，方便数据操作
-        Map<String, List<Long>> bigMap = new HashMap<>();
-        Iterator<Map.Entry<String, List<Long>>> bigIterator = bigMapState.iterator();
-        while (bigIterator.hasNext()) {
-            Map.Entry<String, List<Long>> next = bigIterator.next();
-            bigMap.put(next.getKey(), next.getValue());
-        }
-        // 将每个事件窗口步长数据集累加的值，添加到窗口大小数据集中bigMap中
-        for (Map.Entry<String, Long> smallMapEntry : smallMap.entrySet()) {
-            String eventCode = smallMapEntry.getKey();
-            Long eventValue = smallMapEntry.getValue();
-            List<Long> oldEventValueList = bigMap.get(eventCode);
-            if (CollectionUtil.isNullOrEmpty(oldEventValueList)) {
-                oldEventValueList = new ArrayList<>();
-            }
-            oldEventValueList.add(eventValue);
-            bigMap.put(eventCode, oldEventValueList);
-        }
-        // 当前窗口步长的数据已经添加到窗口中了，清空状态
-        smallMapState.clear();
+        // 将每个事件窗口步长数据集累加的值，添加到窗口大小数据集中bigMapState中
+        updateBigMapWithSmallMap(timestamp);
         // 清理窗口大小之外的数据
-        for (Map.Entry<String, List<Long>> bigMapEntry : bigMap.entrySet()) {
-            String eventCode = bigMapEntry.getKey();
-            List<Long> eventValueList = bigMapEntry.getValue();
-            Long windowSize = ruleConditionMapByEventCode.get(eventCode).getWindowSize();
-            if (eventValueList.size() > windowSize) {
-                eventValueList = eventValueList.subList(eventValueList.size() - 20, eventValueList.size());
-            }
-            bigMap.put(eventCode, eventValueList);
-        }
-        // 将bigMap更新到bigMapState中
-        for (Map.Entry<String, List<Long>> bigMapEntry : bigMap.entrySet()) {
-            String eventCode = bigMapEntry.getKey();
-            List<Long> eventValueList = bigMapEntry.getValue();
-            bigMapState.put(eventCode, eventValueList);
-        }
+        cleanupWindowData(timestamp, ruleConditionMapByEventCode);
         // 判断是否触发规则事件阈值
-        Map<String, Boolean> eventCodeAndWarnResult = new HashMap<>();
-        for (Map.Entry<String, List<Long>> bigMapEntry : bigMap.entrySet()) {
-            String eventCode = bigMapEntry.getKey();
-            List<Long> eventValueList = bigMapEntry.getValue();
-            long eventValueSum = eventValueList.stream().mapToLong(Long::longValue).sum();
-            Long eventThreshold = ruleConditionMapByEventCode.get(eventCode).getEventThreshold();
-            eventCodeAndWarnResult.put(eventCode, eventValueSum > eventThreshold);
-        }
-        Integer conditionOperator = ruleInfo.getCombinedConditionOperator();
+        boolean eventResult = evaluateEventThresholds(ruleConditionMapByEventCode);
         // 根据规则中事件条件表达式组合判断事件结果 与预警频率 判断否是触发预警
-        boolean eventResult = evaluateEventResults(eventCodeAndWarnResult, conditionOperator);
+        if (lastWarningTimeState.value() == null) {
+            lastWarningTimeState.update(0L);
+        }
         if (eventResult && (timestamp - lastWarningTimeState.value() >= ruleInfo.getWarnInterval())) {
             lastWarningTimeState.update(timestamp);
             // TODO: 进行预警信息拼接组合
+            log.warn("用户[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
             out.collect("事件[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
+        }
+        logSmallMapState(smallMapState, "onTimer","after");
+        logBigMapState(bigMapState, "onTimer","after");
+    }
+
+    /**
+     * 判断是否触发规则事件阈值
+     */
+    private boolean evaluateEventThresholds(Map<String, RuleConditionDTO> ruleConditionMapByEventCode) throws Exception {
+        Map<String, Boolean> eventCodeAndWarnResult = new HashMap<>();
+        for (Map.Entry<String, Map<Long, Long>> bigMapEntry : bigMapState.entries()) {
+            String eventCode = bigMapEntry.getKey();
+            Map<Long, Long> timestampAndEventValueMap = bigMapEntry.getValue();
+            long eventValueSum = timestampAndEventValueMap.values().stream().mapToLong(Long::longValue).sum();
+            Long eventThreshold = ruleConditionMapByEventCode.get(eventCode).getEventThreshold();
+            eventCodeAndWarnResult.put(eventCode, eventValueSum > eventThreshold);
+        }
+        boolean eventResult = evaluateEventResults(eventCodeAndWarnResult, ruleInfo.getCombinedConditionOperator());
+        return eventResult;
+    }
+
+    /**
+     * 将每个事件窗口步长数据集累加的值，添加到窗口大小数据集中bigMapState中
+     */
+    private void updateBigMapWithSmallMap(long timestamp) throws Exception {
+        for (Map.Entry<String, Long> smallMapEntry : smallMapState.entries()) {
+            String eventCode = smallMapEntry.getKey();
+            Long eventValue = smallMapEntry.getValue();
+            Map<Long, Long> timestampAndEventValueMap = bigMapState.get(eventCode);
+            if (CollectionUtil.isNullOrEmpty(timestampAndEventValueMap)) {
+                timestampAndEventValueMap = new HashMap<>();
+            }
+            timestampAndEventValueMap.put(timestamp, eventValue);
+            bigMapState.put(eventCode, timestampAndEventValueMap);
+        }
+        // 当前窗口步长的数据已经添加到窗口中了，清空状态
+        smallMapState.clear();
+    }
+
+    /**
+     * 清理窗口大小之外的数据
+     */
+    private void cleanupWindowData(long timestamp, Map<String, RuleConditionDTO> ruleConditionMapByEventCode) throws Exception {
+        for (Map.Entry<String, Map<Long, Long>> bigMapEntry : bigMapState.entries()) {
+            String eventCode = bigMapEntry.getKey();
+            Map<Long, Long> timestampAndEventValueMap = bigMapEntry.getValue();
+            Long windowSize = ruleConditionMapByEventCode.get(eventCode).getWindowSize();
+            long twentyMinutesAgo = timestamp - windowSize;
+            Iterator<Map.Entry<Long, Long>> iterator = timestampAndEventValueMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Long, Long> next = iterator.next();
+                Long time = next.getKey();
+                if (time < twentyMinutesAgo) {
+                    iterator.remove();
+                }
+            }
         }
     }
 
+    private void logSmallMapState(MapState<String, Long> smallMapState, String methodName, String type) throws Exception {
+        Map<String, Long> smallMap = new HashMap<>();
+        Iterator<Map.Entry<String, Long>> iterator = smallMapState.iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Long> next = iterator.next();
+            smallMap.put(next.getKey(), next.getValue());
+        }
+        log.warn("{}-{}-smallMap: {}", methodName, type, JsonUtil.toJsonString(smallMap));
+    }
+
+    private void logBigMapState(MapState<String, Map<Long, Long>> bigMapState, String methodName, String type) throws Exception {
+        Map<String, Map<Long, Long>> bigMap = new HashMap<>();
+        Iterator<Map.Entry<String, Map<Long, Long>>> iterator = bigMapState.iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Map<Long, Long>> next = iterator.next();
+            bigMap.put(next.getKey(), next.getValue());
+        }
+        log.warn("{}-{}-bigMap: {}", methodName, type, JsonUtil.toJsonString(bigMap));
+    }
+
+    /**
+     * 评估事件结果，根据给定的条件操作符返回最终结果。
+     * @param eventCodeAndWarnResult 包含事件代码及其对应的警告结果的映射
+     * @param conditionOperator 条件操作符，支持 AND 和 OR
+     * @return 根据条件操作符计算后的最终结果（true 或 false）
+     */
     public static boolean evaluateEventResults(Map<String, Boolean> eventCodeAndWarnResult, Integer conditionOperator) {
-        // 初始化结果变量
+        // 初始化结果变量，根据条件操作符判断初始值
         boolean result = conditionOperator.equals(RuleConditionOperatorTypeEnum.AND.getCode());
 
-        // 遍历 Map
+        // 遍历事件结果的 Map
         for (Boolean eventResult : eventCodeAndWarnResult.values()) {
             if (conditionOperator.equals(RuleConditionOperatorTypeEnum.AND.getCode())) {
                 // 对于 AND，只有当所有结果都为 true 时，结果才为 true
@@ -224,7 +269,8 @@ public class ProcessorOne implements Processor {
                 }
             }
         }
-
+        // 返回最终的评估结果
         return result;
     }
+
 }
