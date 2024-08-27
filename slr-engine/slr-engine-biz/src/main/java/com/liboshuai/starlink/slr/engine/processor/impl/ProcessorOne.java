@@ -98,6 +98,7 @@ public class ProcessorOne implements Processor {
                 // 匹配到事件时，进行事件值累加
                 if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
                         && eventTime.isAfter(crossHistoryTimeline)) {
+                    // FIXME: 解决每次onTimer清除smallMapState后重复获取初始值的问题
                     if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
                         // 跨历史时间段，当状态值为空时从redis获取初始值
                         String key = RedisKeyConstants.DORIS_HISTORY_VALUE
@@ -217,7 +218,7 @@ public class ProcessorOne implements Processor {
             while (iterator.hasNext()) {
                 Map.Entry<Long, Long> next = iterator.next();
                 Long time = next.getKey();
-                if (time < twentyMinutesAgo) {
+                if (time <= twentyMinutesAgo) {
                     iterator.remove();
                 }
             }
