@@ -52,6 +52,16 @@
 }
 ```
 
+## redis
+```
+hset slr_doris_history_value:ruleCode01:eventCode01 userId01 1
+hset slr_doris_history_value:ruleCode01:eventCode01 userId02 2
+hset slr_doris_history_value:ruleCode01:eventCode02 userId01 3
+hset slr_doris_history_value:ruleCode01:eventCode02 userId02 4
+hset slr_doris_history_value:ruleCode02:eventCode03 userId01 5
+hset slr_doris_history_value:ruleCode02:eventCode03 userId02 6
+```
+
 # 第一分钟
 
 ## 数据
