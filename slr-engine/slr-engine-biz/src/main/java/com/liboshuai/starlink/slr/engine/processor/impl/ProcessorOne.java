@@ -6,6 +6,8 @@ import com.liboshuai.starlink.slr.engine.api.dto.EventKafkaDTO;
 import com.liboshuai.starlink.slr.engine.api.dto.RuleConditionDTO;
 import com.liboshuai.starlink.slr.engine.api.dto.RuleInfoDTO;
 import com.liboshuai.starlink.slr.engine.api.enums.RuleConditionOperatorTypeEnum;
+import com.liboshuai.starlink.slr.engine.convert.EventKeyConvert;
+import com.liboshuai.starlink.slr.engine.dto.WarnInfoDTO;
 import com.liboshuai.starlink.slr.engine.exception.BusinessException;
 import com.liboshuai.starlink.slr.engine.processor.Processor;
 import com.liboshuai.starlink.slr.engine.utils.data.RedisUtil;
@@ -53,6 +55,11 @@ public class ProcessorOne implements Processor {
     private ValueState<Long> lastWarningTimeState;
 
     /**
+     * key详情信息（主要用于预警信息）
+     */
+    private ValueState<WarnInfoDTO> warnInfoState;
+
+    /**
      * 注意千万不要在open方法中对状态进行赋值操作，否则进行的赋值，在processElement等方法中并不能获取到
      */
     @Override
@@ -71,14 +78,14 @@ public class ProcessorOne implements Processor {
         lastWarningTimeState = runtimeContext.getState(
                 new ValueStateDescriptor<>("lastWarningTimeState_" + ruleCode, Long.class)
         );
+        warnInfoState = runtimeContext.getState(
+                new ValueStateDescriptor<>("warnInfoState_" + ruleCode, WarnInfoDTO.class)
+        );
     }
 
     @Override
     public void processElement(long timestamp, EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception {
-        // 调试使用，待删除
         log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
-        logSmallMapState(smallMapState, "processElement","after");
-        logBigMapState(bigMapState, "processElement","after");
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
@@ -96,6 +103,9 @@ public class ProcessorOne implements Processor {
         // 多个规则条件进行窗口值累加
         for (RuleConditionDTO ruleConditionDTO : ruleConditionList) {
             if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())) { // 事件编号匹配上
+                // 更新预警所需信息
+                WarnInfoDTO warnInfoDTO = EventKeyConvert.INSTANCE.eventKafkaDTO2WarnInfoDTO(eventKafkaDTO);
+                warnInfoState.update(warnInfoDTO);
                 // 状态值防空
                 if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
                     smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
@@ -131,9 +141,6 @@ public class ProcessorOne implements Processor {
                 }
             }
         }
-        // 调试使用，待删除
-        logSmallMapState(smallMapState, "processElement","before");
-        logBigMapState(bigMapState, "processElement","before");
     }
 
     @Override
@@ -142,9 +149,6 @@ public class ProcessorOne implements Processor {
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
-        // 调试使用，待删除
-        logSmallMapState(smallMapState, "onTimer", "before");
-        logBigMapState(bigMapState, "onTimer","before");
         // 获取规则条件
         List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
@@ -167,13 +171,18 @@ public class ProcessorOne implements Processor {
         }
         if (eventResult && (timestamp - lastWarningTimeState.value() >= ruleInfoDTO.getWarnInterval())) {
             lastWarningTimeState.update(timestamp);
+            WarnInfoDTO warnInfoDTO = warnInfoState.value();
             // TODO: 进行预警信息拼接组合
-            log.warn("用户[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
-            out.collect("事件[{}]触发了[{}]规则，事件值超过阈值[{}]，请尽快处理");
+            log.warn("{}渠道的{}({})用户触发了{}({})规则，请尽快处理!",
+                    warnInfoDTO.getChannel(), warnInfoDTO.getKeyCode(), warnInfoDTO.getKeyValue(),
+                    ruleInfoDTO.getRuleName(), ruleInfoDTO.getRuleCode());
+            out.collect(StringUtil.format("{}渠道的{}({})用户触发了{}({})规则，请尽快处理!",
+                    warnInfoDTO.getChannel(), warnInfoDTO.getKeyCode(), warnInfoDTO.getKeyValue(),
+                    ruleInfoDTO.getRuleName(), ruleInfoDTO.getRuleCode()));
         }
         // 调试使用，待删除
-        logSmallMapState(smallMapState, "onTimer","after");
-        logBigMapState(bigMapState, "onTimer","after");
+        logSmallMapState(smallMapState, "onTimer", "after");
+        logBigMapState(bigMapState, "onTimer", "after");
     }
 
     /**
@@ -217,7 +226,6 @@ public class ProcessorOne implements Processor {
         for (Map.Entry<String, Map<Long, Long>> bigMapEntry : bigMapState.entries()) {
             String eventCode = bigMapEntry.getKey();
             Map<Long, Long> timestampAndEventValueMap = bigMapEntry.getValue();
-            // FIXME: 解决空指针
             Long windowSize = ruleConditionMapByEventCode.get(eventCode).getWindowSize();
             long twentyMinutesAgo = timestamp - windowSize;
             Iterator<Map.Entry<Long, Long>> iterator = timestampAndEventValueMap.entrySet().iterator();
@@ -254,8 +262,9 @@ public class ProcessorOne implements Processor {
 
     /**
      * 评估事件结果，根据给定的条件操作符返回最终结果。
+     *
      * @param eventCodeAndWarnResult 包含事件代码及其对应的警告结果的映射
-     * @param conditionOperator 条件操作符，支持 AND 和 OR
+     * @param conditionOperator      条件操作符，支持 AND 和 OR
      * @return 根据条件操作符计算后的最终结果（true 或 false）
      */
     public static boolean evaluateEventResults(Map<String, Boolean> eventCodeAndWarnResult, Integer conditionOperator) {

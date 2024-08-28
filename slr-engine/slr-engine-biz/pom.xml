@@ -44,6 +44,8 @@
         <lombok.version>1.18.30</lombok.version>
         <!-- hutool -->
         <hutool.version>5.8.29</hutool.version>
+        <!-- mapstruct -->
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
         <!-- groovy 4.0 -->
         <groovy.version>4.0.10</groovy.version>
         <!-- aviator 5 -->
@@ -282,6 +284,23 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>${hutool.version}</version>
+        </dependency>
+
+        <!-- 对象转换 mapstruct-->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-jdk8</artifactId> <!-- use mapstruct-jdk8 for Java 8 or higher -->
+            <version>${mapstruct.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>${mapstruct.version}</version>
         </dependency>
 
         <!-- Groovy -->
