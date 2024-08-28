@@ -83,12 +83,8 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         onlineRuleCount = queryOnlineRuleCount();
         // 查询银行数据
         bankMapState = queryBank();
-//        log.warn("CoreFunction对象的open方法结束; ");
     }
 
-    /**
-     * TODO：测试的时候先不使用groovy，还是直接使用java代码，方便调试
-     */
     @Override
     public void processElement(EventKafkaDTO eventKafkaDTO,
                                KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.ReadOnlyContext ctx,
@@ -120,7 +116,6 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         // long fireTime = Long.parseLong(timestamp) - Long.parseLong(timestamp) % 60000 + 60000; （简化写法）
         long fireTime = getWindowStartWithOffset(processTime, 0, 60 * 1000) + 60 * 1000;
         ctx.timerService().registerProcessingTimeTimer(fireTime);
-//        log.warn("CoreFunction对象的processElement方法结束; ");
     }
 
     @Override
@@ -144,7 +139,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                 || Objects.equals(op, Envelope.Operation.UPDATE.code()))
                 && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.ENABLE.getCode())) {
             // 在读取、创建、更新，且状态为上线时，则上线一个运算机
-            Processor processor = mockProcessor(getRuntimeContext(), ruleInfoDTO);
+            Processor processor = buildProcessor(getRuntimeContext(), ruleInfoDTO);
             processorByRuleCodeMap.put(ruleCode, processor);
             broadcastState.put(ruleCode, ruleInfoDTO);
             log.warn("上线或更新一个运算机，规则编号为:{}", ruleCode);
@@ -155,7 +150,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             broadcastState.remove(ruleCode);
             log.warn("下线一个运算机，规则编号为:{}", ruleCode);
         }
-//        log.warn("CoreFunction对象的processBroadcastElement方法结束; 运算机数量: {}", processorByRuleCodeMap.keySet().size());
+        log.warn("当前规则运算机数量: {}", processorByRuleCodeMap.keySet().size());
     }
 
     /**
@@ -174,7 +169,6 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             // 调用定时器
             processor.onTimer(timestamp, broadcastState.get(ruleCode), out);
         }
-//        log.warn("CoreFunction对象的onTimer方法结束; ");
     }
 
     /**

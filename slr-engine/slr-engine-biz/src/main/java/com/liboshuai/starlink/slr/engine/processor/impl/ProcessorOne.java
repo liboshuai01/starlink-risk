@@ -79,7 +79,6 @@ public class ProcessorOne implements Processor {
         warnInfoState = runtimeContext.getState(
                 new ValueStateDescriptor<>("warnInfoState_" + ruleCode, WarnInfoDTO.class)
         );
-//        log.warn("ProcessorOne对象init方法结束; ruleCode={}", ruleInfoDTO.getRuleCode());
     }
 
     @Override
@@ -138,10 +137,6 @@ public class ProcessorOne implements Processor {
                 }
             }
         }
-        // 调试使用，待删除
-//        logSmallMapState(ruleInfoDTO.getRuleCode(),
-//                ruleConditionList.stream().map(RuleConditionDTO::getEventCode).collect(Collectors.toList()),
-//                eventKafkaDTO.getKeyCode(), smallMapState);
     }
 
     @Override
