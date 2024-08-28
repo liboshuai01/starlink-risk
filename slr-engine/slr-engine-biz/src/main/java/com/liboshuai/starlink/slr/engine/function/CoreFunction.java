@@ -158,6 +158,9 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
 //        log.warn("CoreFunction对象的processBroadcastElement方法结束; 运算机数量: {}", processorByRuleCodeMap.keySet().size());
     }
 
+    /**
+     * 由于每个 key 都独立维护自己的计时器状态，若两个不同的 key 在相同的时间点触发了计时器，则 onTimer 方法会被调用两次。
+     */
     @Override
     public void onTimer(long timestamp,
                         KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx,
@@ -243,11 +246,8 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
      */
     private void waitForInitAllProcessor() throws IOException, InterruptedException {
         long currentOnlineRuleCount = getCurrentOnlineRuleCount();
-        while (true) {
-            log.warn("等待所有运算机初始化完成-onlineRuleCount:{}, currentOnlineRuleCount: {}", onlineRuleCount, currentOnlineRuleCount);
-            if (onlineRuleCount.get() == currentOnlineRuleCount) {
-                break;
-            }
+        while (onlineRuleCount.get() != currentOnlineRuleCount) {
+            log.warn("等待所有运算机初始化完成: MySQL库中上线规则数量={}, 运算机池中上线的规则数量={}", onlineRuleCount, currentOnlineRuleCount);
             TimeUnit.SECONDS.sleep(1);
             onlineRuleCount = queryOnlineRuleCount();
             currentOnlineRuleCount = getCurrentOnlineRuleCount();
