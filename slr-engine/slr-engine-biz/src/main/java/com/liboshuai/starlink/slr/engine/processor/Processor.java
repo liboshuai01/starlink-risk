@@ -15,7 +15,7 @@ public interface Processor {
     /**
      * 初始化
      */
-    void open(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) throws IOException;
+    void init(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) throws IOException;
 
     /**
      * 处理单条数据

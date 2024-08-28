@@ -15,7 +15,10 @@ import com.liboshuai.starlink.slr.engine.utils.date.DateUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.StringUtil;
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.apache.flink.api.common.state.*;
+import org.apache.flink.api.common.state.MapState;
+import org.apache.flink.api.common.state.MapStateDescriptor;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.util.CollectionUtil;
 import org.apache.flink.util.Collector;
@@ -23,7 +26,6 @@ import org.apache.flink.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -59,12 +61,8 @@ public class ProcessorOne implements Processor {
      */
     private ValueState<WarnInfoDTO> warnInfoState;
 
-    /**
-     * 注意千万不要在open方法中对状态进行赋值操作，否则进行的赋值，在processElement等方法中并不能获取到
-     */
     @Override
-    public void open(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) throws IOException {
-        log.warn("调用ProcessorOne对象的open方法, ruleInfoDTO={}", ruleInfoDTO);
+    public void init(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO) {
         String ruleCode = ruleInfoDTO.getRuleCode();
         smallMapState = runtimeContext.getMapState(
                 new MapStateDescriptor<>("smallMapState_" + ruleCode, String.class, Long.class)
@@ -81,18 +79,17 @@ public class ProcessorOne implements Processor {
         warnInfoState = runtimeContext.getState(
                 new ValueStateDescriptor<>("warnInfoState_" + ruleCode, WarnInfoDTO.class)
         );
+//        log.warn("ProcessorOne对象init方法结束; ruleCode={}", ruleInfoDTO.getRuleCode());
     }
 
     @Override
     public void processElement(long timestamp, EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception {
-        log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
         String eventKafkaDTOChannel = eventKafkaDTO.getChannel();
         String ruleInfoChannel = ruleInfoDTO.getChannel();
         if (!Objects.equals(eventKafkaDTOChannel, ruleInfoChannel)) {
-            log.warn("ProcessorOne-processElement 事件数据与规则数据的渠道不匹配，跳过");
             return;
         }
         // 获取规则条件
@@ -141,11 +138,14 @@ public class ProcessorOne implements Processor {
                 }
             }
         }
+        // 调试使用，待删除
+//        logSmallMapState(ruleInfoDTO.getRuleCode(),
+//                ruleConditionList.stream().map(RuleConditionDTO::getEventCode).collect(Collectors.toList()),
+//                eventKafkaDTO.getKeyCode(), smallMapState);
     }
 
     @Override
     public void onTimer(long timestamp, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception {
-        log.warn("调用ProcessorOne对象的onTimer方法, timestamp={}, out={}", timestamp, out);
         if (Objects.isNull(ruleInfoDTO)) {
             throw new BusinessException("运算机 ruleInfoDTO 必须非空");
         }
@@ -169,9 +169,9 @@ public class ProcessorOne implements Processor {
         if (lastWarningTimeState.value() == null) {
             lastWarningTimeState.update(0L);
         }
+        WarnInfoDTO warnInfoDTO = warnInfoState.value();
         if (eventResult && (timestamp - lastWarningTimeState.value() >= ruleInfoDTO.getWarnInterval())) {
             lastWarningTimeState.update(timestamp);
-            WarnInfoDTO warnInfoDTO = warnInfoState.value();
             // TODO: 进行预警信息拼接组合
             log.warn("{}渠道的{}({})用户触发了{}({})规则，请尽快处理!",
                     warnInfoDTO.getChannel(), warnInfoDTO.getKeyCode(), warnInfoDTO.getKeyValue(),
@@ -181,8 +181,8 @@ public class ProcessorOne implements Processor {
                     ruleInfoDTO.getRuleName(), ruleInfoDTO.getRuleCode()));
         }
         // 调试使用，待删除
-        logSmallMapState(smallMapState, "onTimer", "after");
-        logBigMapState(bigMapState, "onTimer", "after");
+        logBigMapState(ruleInfoDTO.getRuleCode(), ruleConditionMapByEventCode.keySet(),
+                warnInfoDTO == null ? null : warnInfoDTO.getKeyCode(), bigMapState);
     }
 
     /**
@@ -240,24 +240,28 @@ public class ProcessorOne implements Processor {
         }
     }
 
-    private void logSmallMapState(MapState<String, Long> smallMapState, String methodName, String type) throws Exception {
+    private void logSmallMapState(String ruleCode, List<String> eventCodeList, String keyCode,
+                                  MapState<String, Long> smallMapState) throws Exception {
         Map<String, Long> smallMap = new HashMap<>();
         Iterator<Map.Entry<String, Long>> iterator = smallMapState.iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Long> next = iterator.next();
             smallMap.put(next.getKey(), next.getValue());
         }
-        log.warn("{}-{}-smallMap: {}", methodName, type, JsonUtil.toJsonString(smallMap));
+        log.warn("ProcessorOne对象processElement方法结束; ruleCode={}, eventCodeList={}, keyCode={}, smallMapState={}",
+                ruleCode, JsonUtil.toJsonString(eventCodeList), keyCode, JsonUtil.toJsonString(smallMap));
     }
 
-    private void logBigMapState(MapState<String, Map<Long, Long>> bigMapState, String methodName, String type) throws Exception {
+    private void logBigMapState(String ruleCode, Set<String> eventCodeList, String keyCode, MapState<String,
+            Map<Long, Long>> bigMapState) throws Exception {
         Map<String, Map<Long, Long>> bigMap = new HashMap<>();
         Iterator<Map.Entry<String, Map<Long, Long>>> iterator = bigMapState.iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Map<Long, Long>> next = iterator.next();
             bigMap.put(next.getKey(), next.getValue());
         }
-        log.warn("{}-{}-bigMap: {}", methodName, type, JsonUtil.toJsonString(bigMap));
+        log.warn("ProcessorOne对象onTimer方法结束; ruleCode={}, eventCodeList={}, keyCode={}, bigMapState={}",
+                ruleCode, JsonUtil.toJsonString(eventCodeList), keyCode, JsonUtil.toJsonString(bigMap));
     }
 
     /**

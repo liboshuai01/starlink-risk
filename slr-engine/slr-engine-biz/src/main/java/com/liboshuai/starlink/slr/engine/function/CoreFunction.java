@@ -73,7 +73,6 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
      */
     @Override
     public void open(Configuration parameters) throws Exception {
-        log.warn("调用一次open方法");
         processorByRuleCodeMap = new ConcurrentHashMap<>();
         groovyClassLoader = new GroovyClassLoader();
         RECENT_EVENT_LIST_STATE_DESC
@@ -84,6 +83,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         onlineRuleCount = queryOnlineRuleCount();
         // 查询银行数据
         bankMapState = queryBank();
+//        log.warn("CoreFunction对象的open方法结束; ");
     }
 
     /**
@@ -93,7 +93,6 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     public void processElement(EventKafkaDTO eventKafkaDTO,
                                KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.ReadOnlyContext ctx,
                                Collector<String> out) throws Exception {
-        log.warn("调用一次processElement方法, eventKafkaDTO: {}, out: {}", eventKafkaDTO, out);
         long processTime = ctx.currentProcessingTime();
         // 等待所有运算机初始化完成
         waitForInitAllProcessor();
@@ -120,15 +119,14 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         // 注册定时器（窗口大小1分钟）
         // long fireTime = Long.parseLong(timestamp) - Long.parseLong(timestamp) % 60000 + 60000; （简化写法）
         long fireTime = getWindowStartWithOffset(processTime, 0, 60 * 1000) + 60 * 1000;
-        log.warn("ctx.timestamp(): {}, fireTime: {}", ctx.timestamp(), fireTime);
         ctx.timerService().registerProcessingTimeTimer(fireTime);
+//        log.warn("CoreFunction对象的processElement方法结束; ");
     }
 
     @Override
     public void processBroadcastElement(RuleCdcDTO ruleCdcDTO,
                                         KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.Context ctx,
                                         Collector<String> out) throws Exception {
-        log.warn("调用一次processBroadcastElement方法, ruleCdcDTO: {}, out: {}", ruleCdcDTO, out);
         if (ruleCdcDTO == null) {
             throw new BusinessException("Mysql Cdc 广播流 ruleCdcDTO 必须非空");
         }
@@ -157,14 +155,13 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             broadcastState.remove(ruleCode);
             log.warn("下线一个运算机，规则编号为:{}", ruleCode);
         }
-        log.warn("运算机map, processorByRuleCodeMap: {}", processorByRuleCodeMap);
+//        log.warn("CoreFunction对象的processBroadcastElement方法结束; 运算机数量: {}", processorByRuleCodeMap.keySet().size());
     }
 
     @Override
     public void onTimer(long timestamp,
                         KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.OnTimerContext ctx,
                         Collector<String> out) throws Exception {
-        log.warn("调用一次onTimer方法, timestamp: {}, out: {}", timestamp, out);
         // 从广播流中获取规则信息
         ReadOnlyBroadcastState<String, RuleInfoDTO> broadcastState = ctx.getBroadcastState(BROADCAST_RULE_MAP_STATE_DESC);
         // 数据遍历经过每个规则运算机
@@ -174,6 +171,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             // 调用定时器
             processor.onTimer(timestamp, broadcastState.get(ruleCode), out);
         }
+//        log.warn("CoreFunction对象的onTimer方法结束; ");
     }
 
     /**
@@ -187,7 +185,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
         }
         Class aClass = groovyClassLoader.parseClass(ruleModelGroovyCode);
         Processor processor = (Processor) aClass.newInstance();
-        processor.open(runtimeContext, ruleInfoDTO);
+        processor.init(runtimeContext, ruleInfoDTO);
         return processor;
     }
 
@@ -197,7 +195,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     private Processor mockProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
             throws InstantiationException, IllegalAccessException, IOException {
         Processor processor = new ProcessorOne();
-        processor.open(runtimeContext, ruleInfoDTO);
+        processor.init(runtimeContext, ruleInfoDTO);
         return processor;
     }
 
@@ -246,7 +244,7 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     private void waitForInitAllProcessor() throws IOException, InterruptedException {
         long currentOnlineRuleCount = getCurrentOnlineRuleCount();
         while (true) {
-            log.warn("事件处理流-onlineRuleCount:{}, currentOnlineRuleCount: {}", onlineRuleCount, currentOnlineRuleCount);
+            log.warn("等待所有运算机初始化完成-onlineRuleCount:{}, currentOnlineRuleCount: {}", onlineRuleCount, currentOnlineRuleCount);
             if (onlineRuleCount.get() == currentOnlineRuleCount) {
                 break;
             }
