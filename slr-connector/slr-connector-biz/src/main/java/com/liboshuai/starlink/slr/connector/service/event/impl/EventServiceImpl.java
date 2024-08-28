@@ -107,8 +107,10 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void mockEventToKafka(EventKafkaDTO eventKafkaDTO) {
-        eventProvider.mockEventToKafka(eventKafkaDTO);
+    public void mockEventToKafka(List<EventKafkaDTO> eventKafkaDTOList) {
+        for (EventKafkaDTO eventKafkaDTO : eventKafkaDTOList) {
+            eventProvider.mockEventToKafka(eventKafkaDTO);
+        }
     }
 
 //    /**

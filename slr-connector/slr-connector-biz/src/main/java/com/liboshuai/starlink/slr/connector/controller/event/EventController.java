@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 import static com.liboshuai.starlink.slr.framework.common.pojo.CommonResult.success;
 
@@ -44,8 +45,8 @@ public class EventController {
     @RateLimiter(count = 10000)
     @PostMapping("/mock-event-to-kafka")
     @Operation(summary = "mock事件数据到kafka")
-    public CommonResult<?> mockEventToKafka(@RequestBody EventKafkaDTO eventKafkaDTO) {
-        eventService.mockEventToKafka(eventKafkaDTO);
+    public CommonResult<?> mockEventToKafka(@RequestBody List<EventKafkaDTO> eventKafkaDTOList) {
+        eventService.mockEventToKafka(eventKafkaDTOList);
         return success();
     }
 }
