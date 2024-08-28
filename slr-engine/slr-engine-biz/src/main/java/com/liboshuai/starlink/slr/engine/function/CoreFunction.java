@@ -94,9 +94,11 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
                                KeyedBroadcastProcessFunction<String, EventKafkaDTO, RuleCdcDTO, String>.ReadOnlyContext ctx,
                                Collector<String> out) throws Exception {
         log.warn("调用一次processElement方法, eventKafkaDTO: {}, out: {}", eventKafkaDTO, out);
+        long processTime = ctx.currentProcessingTime();
         // 等待所有运算机初始化完成
         waitForInitAllProcessor();
-        // 将事件放入缓存列表中
+        // 将事件放入缓存列表中，并记录存放的时间
+        eventKafkaDTO.setTimestamp(processTime);
         recentEventListState.add(eventKafkaDTO);
         // 从广播流中获取规则信息
         ReadOnlyBroadcastState<String, RuleInfoDTO> broadcastState = ctx.getBroadcastState(BROADCAST_RULE_MAP_STATE_DESC);
@@ -107,17 +109,17 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             if (!oldRuleListState.contains(ruleCode)) {
                 // 新规则需要先将缓存的最近历史事件数据处理一遍
                 for (EventKafkaDTO historyEventKafkaDTO : recentEventListState.get()) {
-                    processor.processElement(historyEventKafkaDTO, broadcastState.get(ruleCode), out);
+                    processor.processElement(processTime, historyEventKafkaDTO, broadcastState.get(ruleCode), out);
                 }
                 oldRuleListState.put(ruleCode, null);
             } else {
                 // 否则直接处理当前一条事件数据即可
-                processor.processElement(eventKafkaDTO, broadcastState.get(ruleCode), out);
+                processor.processElement(processTime, eventKafkaDTO, broadcastState.get(ruleCode), out);
             }
         }
         // 注册定时器（窗口大小1分钟）
         // long fireTime = Long.parseLong(timestamp) - Long.parseLong(timestamp) % 60000 + 60000; （简化写法）
-        long fireTime = getWindowStartWithOffset(ctx.timestamp(), 0, 60 * 1000) + 60 * 1000;
+        long fireTime = getWindowStartWithOffset(processTime, 0, 60 * 1000) + 60 * 1000;
         log.warn("ctx.timestamp(): {}, fireTime: {}", ctx.timestamp(), fireTime);
         ctx.timerService().registerProcessingTimeTimer(fireTime);
     }

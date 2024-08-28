@@ -55,4 +55,9 @@ public class EventKafkaDTO implements Serializable {
      */
     private Map<String, Object> attribute;
 
+    /**
+     * 事件时间（无需业务方传输，仅用于引擎计算处理使用）
+     */
+    private long timestamp;
+
 }

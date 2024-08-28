@@ -20,7 +20,7 @@ public interface Processor {
     /**
      * 处理单条数据
      */
-    void processElement(EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception;
+    void processElement(long timestamp, EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception;
 
     /**
      * 定时器

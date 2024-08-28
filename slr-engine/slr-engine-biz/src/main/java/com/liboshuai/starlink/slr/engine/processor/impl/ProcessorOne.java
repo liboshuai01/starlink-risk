@@ -74,7 +74,7 @@ public class ProcessorOne implements Processor {
     }
 
     @Override
-    public void processElement(EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception {
+    public void processElement(long timestamp, EventKafkaDTO eventKafkaDTO, RuleInfoDTO ruleInfoDTO, Collector<String> out) throws Exception {
         // 调试使用，待删除
         log.warn("调用ProcessorOne对象的processElement方法, eventKafkaDTO={}, out={}", eventKafkaDTO, out);
         logSmallMapState(smallMapState, "processElement","after");
@@ -88,12 +88,6 @@ public class ProcessorOne implements Processor {
             log.warn("ProcessorOne-processElement 事件数据与规则数据的渠道不匹配，跳过");
             return;
         }
-        // 状态值防空
-        if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
-            smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
-        }
-        // 获取当前事件时间戳
-        LocalDateTime eventTime = DateUtil.convertTimestamp2LocalDateTime(System.currentTimeMillis());
         // 获取规则条件
         List<RuleConditionDTO> ruleConditionList = ruleInfoDTO.getRuleConditionGroup();
         if (CollectionUtil.isNullOrEmpty(ruleConditionList)) {
@@ -101,34 +95,39 @@ public class ProcessorOne implements Processor {
         }
         // 多个规则条件进行窗口值累加
         for (RuleConditionDTO ruleConditionDTO : ruleConditionList) {
-            // 划分为跨历史时间段 和 不跨历史时间段
-            if (ruleConditionDTO.getIsCrossHistory()) { // 跨历史时间段
-                LocalDateTime crossHistoryTimeline = ruleConditionDTO.getCrossHistoryTimeline();
-                // 匹配到事件时，进行事件值累加
-                if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())
-                        && eventTime.isAfter(crossHistoryTimeline)) {
-                    // FIXME: 解决每次onTimer清除smallMapState后重复获取初始值的问题
-                    if (!smallInitMapState.contains(eventKafkaDTO.getEventCode())) {
-                        // 如果为跨历史时间段的，且还没有初始化，则需要从redis中获取初始值
-                        String key = RedisKeyConstants.DORIS_HISTORY_VALUE
-                                + GlobalConstants.REDIS_KEY_SEPARATOR + ruleConditionDTO.getRuleCode()
-                                + GlobalConstants.REDIS_KEY_SEPARATOR + ruleConditionDTO.getEventCode();
-                        String keyCode = eventKafkaDTO.getKeyCode();
-                        String initValue = RedisUtil.hget(key, keyCode);
-                        if (StringUtils.isNullOrWhitespaceOnly(initValue)) {
-                            throw new BusinessException(StringUtil.format("从redis获取初始值必须非空, key:{}, hashKey: {}", key, keyCode));
-                        }
-                        smallMapState.put(eventKafkaDTO.getEventCode(), Long.parseLong(initValue));
-                        smallInitMapState.put(eventKafkaDTO.getEventCode(), null);
-                    }
-                    smallMapState.put(eventKafkaDTO.getEventCode(),
-                            smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
+            if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())) { // 事件编号匹配上
+                // 状态值防空
+                if (smallMapState.get(eventKafkaDTO.getEventCode()) == null) {
+                    smallMapState.put(eventKafkaDTO.getEventCode(), 0L);
                 }
-            } else { // 非跨历史时间段
-                // 匹配到事件时，进行事件值累加
-                if (Objects.equals(eventKafkaDTO.getEventCode(), ruleConditionDTO.getEventCode())) {
-                    smallMapState.put(eventKafkaDTO.getEventCode(),
-                            smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
+                if (ruleConditionDTO.getIsCrossHistory()) { //跨历史时间段
+                    LocalDateTime crossHistoryTimeline = ruleConditionDTO.getCrossHistoryTimeline();
+                    // 因为跨历史时间段的规则条件需要处理历史缓存的数据，而历史缓存的数据可能过多，所以需要根据历史截止点进行过滤，仅需要大于历史截止点的数据
+                    if (eventKafkaDTO.getTimestamp() > DateUtil.convertLocalDateTime2Timestamp(crossHistoryTimeline)) {
+                        // 因为跨历史时间段的规则条件需要从redis中获取doris中历史事件值，所以检查当前值是否已经通过redis初始化后，防止重复初始化
+                        if (!smallInitMapState.contains(eventKafkaDTO.getEventCode())) {
+                            // 如果为跨历史时间段的，且还没有初始化，则需要从redis中获取初始值
+                            String key = RedisKeyConstants.DORIS_HISTORY_VALUE
+                                    + GlobalConstants.REDIS_KEY_SEPARATOR + ruleConditionDTO.getRuleCode()
+                                    + GlobalConstants.REDIS_KEY_SEPARATOR + ruleConditionDTO.getEventCode();
+                            String keyCode = eventKafkaDTO.getKeyCode();
+                            String initValue = RedisUtil.hget(key, keyCode);
+                            if (StringUtils.isNullOrWhitespaceOnly(initValue)) {
+                                throw new BusinessException(StringUtil.format("从redis获取初始值必须非空, key:{}, hashKey: {}", key, keyCode));
+                            }
+                            smallMapState.put(eventKafkaDTO.getEventCode(), Long.parseLong(initValue));
+                            smallInitMapState.put(eventKafkaDTO.getEventCode(), null);
+                        }
+                        // 从redis初始化值后，正常处理数据
+                        smallMapState.put(eventKafkaDTO.getEventCode(),
+                                smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
+                    }
+                } else { // 非跨历史时间段
+                    // 对于非跨历史时间段，只处理当前一条数据，不需要处理历史缓存数据
+                    if (eventKafkaDTO.getTimestamp() == timestamp) {
+                        smallMapState.put(eventKafkaDTO.getEventCode(),
+                                smallMapState.get(eventKafkaDTO.getEventCode()) + Long.parseLong(eventKafkaDTO.getEventValue()));
+                    }
                 }
             }
         }
@@ -218,6 +217,7 @@ public class ProcessorOne implements Processor {
         for (Map.Entry<String, Map<Long, Long>> bigMapEntry : bigMapState.entries()) {
             String eventCode = bigMapEntry.getKey();
             Map<Long, Long> timestampAndEventValueMap = bigMapEntry.getValue();
+            // FIXME: 解决空指针
             Long windowSize = ruleConditionMapByEventCode.get(eventCode).getWindowSize();
             long twentyMinutesAgo = timestamp - windowSize;
             Iterator<Map.Entry<Long, Long>> iterator = timestampAndEventValueMap.entrySet().iterator();
