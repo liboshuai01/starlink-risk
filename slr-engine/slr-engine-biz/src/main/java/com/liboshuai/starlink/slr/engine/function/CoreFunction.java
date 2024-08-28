@@ -6,7 +6,6 @@ import com.liboshuai.starlink.slr.engine.common.ParameterConstants;
 import com.liboshuai.starlink.slr.engine.dto.RuleCdcDTO;
 import com.liboshuai.starlink.slr.engine.exception.BusinessException;
 import com.liboshuai.starlink.slr.engine.processor.Processor;
-import com.liboshuai.starlink.slr.engine.processor.impl.ProcessorOne;
 import com.liboshuai.starlink.slr.engine.utils.jdbc.JdbcUtil;
 import com.liboshuai.starlink.slr.engine.utils.parameter.ParameterUtil;
 import com.liboshuai.starlink.slr.engine.utils.string.JsonUtil;
@@ -189,12 +188,12 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
     /**
      * mock运算机对象
      */
-    private Processor mockProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
-            throws InstantiationException, IllegalAccessException, IOException {
-        Processor processor = new ProcessorOne();
-        processor.init(runtimeContext, ruleInfoDTO);
-        return processor;
-    }
+//    private Processor mockProcessor(RuntimeContext runtimeContext, RuleInfoDTO ruleInfoDTO)
+//            throws InstantiationException, IllegalAccessException, IOException {
+//        Processor processor = new ProcessorOne();
+//        processor.init(runtimeContext, ruleInfoDTO);
+//        return processor;
+//    }
 
     /**
      * 查询上线的规则数量
