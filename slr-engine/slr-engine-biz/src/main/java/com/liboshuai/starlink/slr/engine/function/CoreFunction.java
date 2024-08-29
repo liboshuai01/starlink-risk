@@ -134,20 +134,29 @@ public class CoreFunction extends KeyedBroadcastProcessFunction<String, EventKaf
             throw new BusinessException("Mysql Cdc 广播流 ruleInfoDTO 必须非空");
         }
         BroadcastState<String, RuleInfoDTO> broadcastState = ctx.getBroadcastState(BROADCAST_RULE_MAP_STATE_DESC);
-        if ((Objects.equals(op, Envelope.Operation.READ.code()) || Objects.equals(op, Envelope.Operation.CREATE.code())
-                || Objects.equals(op, Envelope.Operation.UPDATE.code()))
-                && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.ENABLE.getCode())) {
+        if (
+                (
+                        Objects.equals(op, Envelope.Operation.READ.code())
+                                || Objects.equals(op, Envelope.Operation.CREATE.code())
+                                || Objects.equals(op, Envelope.Operation.UPDATE.code())
+                )
+                        && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.ENABLE.getCode())
+        ) {
             // 在读取、创建、更新，且状态为上线时，则上线一个运算机
             Processor processor = buildProcessor(getRuntimeContext(), ruleInfoDTO);
             processorByRuleCodeMap.put(ruleCode, processor);
             broadcastState.put(ruleCode, ruleInfoDTO);
             log.warn("上线或更新一个运算机，规则编号为:{}", ruleCode);
-        } else if (Objects.equals(op, Envelope.Operation.UPDATE.code())
-                && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.DISABLE.getCode())) {
+        } else if (
+                Objects.equals(op, Envelope.Operation.UPDATE.code())
+                        && Objects.equals(ruleInfoDTO.getStatus(), RuleStatusEnum.DISABLE.getCode())
+        ) {
             // 在更新，且状态为下线时，则下线一个运算机
-            processorByRuleCodeMap.remove(ruleCode);
-            broadcastState.remove(ruleCode);
-            log.warn("下线一个运算机，规则编号为:{}", ruleCode);
+            if (processorByRuleCodeMap.containsKey(ruleCode)) {
+                processorByRuleCodeMap.remove(ruleCode);
+                broadcastState.remove(ruleCode);
+                log.warn("下线一个运算机，规则编号为:{}", ruleCode);
+            }
         }
         log.warn("当前规则运算机数量: {}", processorByRuleCodeMap.keySet().size());
     }
